@@ -2,15 +2,29 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
+interface Property {
+  _id: string;
+  title: string;
+  description: string;
+  location: string;
+  username: string;
+  createdAt: string;
+}
 
 const properties = ref<Property[]>([])
+const loading = ref(true)
+const error = ref<string | null>(null)
 
 const fetchProperties = async () => {
   try {
+    loading.value = true
     const response = await axios.get('http://localhost:5000/api/properties')
     properties.value = response.data
-  } catch (error) {
-    console.error('Error fetching properties:', error)
+    loading.value = false
+  } catch (err) {
+    console.error('Error fetching properties:', err)
+    error.value = 'Error fetching properties'
+    loading.value = false
   }
 }
 
@@ -20,7 +34,10 @@ onMounted(fetchProperties)
 <template>
   <div class="property-list">
     <h2>Recent Properties</h2>
-    <ul>
+    <div v-if="loading">Loading...</div>
+    <div v-else-if="error">{{ error }}</div>
+    <div v-else-if="properties.length === 0">No properties available</div>
+    <ul v-else>
       <li v-for="property in properties" :key="property._id" class="property-item">
         <h3>{{ property.title }}</h3>
         <p>{{ property.description }}</p>
@@ -37,14 +54,12 @@ onMounted(fetchProperties)
   max-width: 800px;
   margin: 0 auto;
 }
-
 .property-item {
   border: 1px solid #ddd;
   padding: 1rem;
   margin-bottom: 1rem;
   list-style-type: none;
 }
-
 h3 {
   margin-top: 0;
 }
