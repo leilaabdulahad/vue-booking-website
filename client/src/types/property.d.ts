@@ -3,6 +3,7 @@
     title: string
     description: string
     location: string
+    maxGuests: number
     userId: string
     username: string
     createdAt: string
