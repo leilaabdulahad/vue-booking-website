@@ -6,4 +6,5 @@ interface Booking {
     endDate: string
     guests: number
     totalPrice: number
+    message: string
 }
