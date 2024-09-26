@@ -7,4 +7,5 @@
     userId: string
     username: string
     createdAt: string
+    pricePerNight: number
   }
