@@ -7,4 +7,6 @@ interface Booking {
     guests: number
     totalPrice: number
     message: string
+    status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
+    paymentId: string
 }
