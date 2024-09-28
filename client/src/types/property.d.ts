@@ -8,4 +8,5 @@
     username: string
     createdAt: string
     pricePerNight: number
+    rooms: number
   }
