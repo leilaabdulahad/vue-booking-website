@@ -1,15 +1,7 @@
+
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
-
-interface Property {
-  _id: string;
-  title: string;
-  description: string;
-  location: string;
-  username: string;
-  createdAt: string;
-}
 
 const properties = ref<Property[]>([])
 const loading = ref(true)
@@ -18,7 +10,7 @@ const error = ref<string | null>(null)
 const fetchProperties = async () => {
   try {
     loading.value = true
-    const response = await axios.get('http://localhost:5000/api/properties')
+    const response = await axios.get<Property[]>('http://localhost:5000/api/properties') 
     properties.value = response.data
     loading.value = false
   } catch (err) {
@@ -31,6 +23,7 @@ const fetchProperties = async () => {
 onMounted(fetchProperties)
 </script>
 
+
 <template>
   <div class="property-list">
     <h2>Recent Properties</h2>
@@ -38,14 +31,19 @@ onMounted(fetchProperties)
     <div v-else-if="error">{{ error }}</div>
     <div v-else-if="properties.length === 0">No properties available</div>
     <ul v-else>
-      <li v-for="property in properties" :key="property._id" class="property-item">
-        <h3>{{ property.title }}</h3>
-        <p>{{ property.description }}</p>
-        <p><strong>Location:</strong> {{ property.location }}</p>
-        <p><strong>Posted by:</strong> {{ property.username || 'Unknown user' }}</p>
-        <p><small>Posted on: {{ new Date(property.createdAt).toLocaleString() }}</small></p>
-      </li>
-    </ul>
+  <li v-for="property in properties" :key="property._id" class="property-item">
+    <h3>{{ property.title }}</h3>
+    <p>{{ property.description }}</p>
+    <p><strong>Location:</strong> {{ property.location }}</p>
+    <p><strong>Max Guests:</strong> {{ property.maxGuests }}</p>
+    <p><strong>Price Per Night:</strong> ${{ property.pricePerNight }}</p>
+    <p><strong>Rooms:</strong> {{ property.rooms }}</p>
+    <p><strong>Amenities:</strong> {{ property.amenities.join(', ') }}</p>
+    <p><strong>Posted by:</strong> {{ property.username || 'Unknown user' }}</p>
+    <p><small>Posted on: {{ new Date(property.createdAt).toLocaleString() }}</small></p>
+  </li>
+</ul>
+
   </div>
 </template>
 
