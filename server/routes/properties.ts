@@ -1,42 +1,69 @@
-import express from 'express'
-import Post from '../models/Property'
+import express, { Request, Response } from 'express'
+import Property from '../models/Property'
 import User from '../models/User'
+import { clerkClient } from '@clerk/clerk-sdk-node'
 
 const router = express.Router()
 
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
-    const { title, description, location, clerkUserId } = req.body
-    
+    const {
+      title,
+      description,
+      location,
+      maxGuests,
+      pricePerNight,
+      rooms,
+      amenities,
+      clerkUserId
+    } = req.body
+
+    //find/creates the user based on clerk id
     let user = await User.findOne({ clerkUserId })
     if (!user) {
-
-      user = new User({ clerkUserId, username: 'Unknown', email: 'unknown@example.com' })
-      await user.save();
+      //fetches user details
+      const clerkUser = await clerkClient.users.getUser(clerkUserId)
+      const username = clerkUser?.username || clerkUser?.firstName + ' ' + clerkUser?.lastName || 'Unknown'
+      const email = clerkUser?.emailAddresses[0]?.emailAddress || 'unknown@example.com'
+      
+      user = new User({ clerkUserId, username, email })
+      await user.save()
     }
-    
-    const post = new Post({ title, description, location, userId: user._id })
-    await post.save()
-    res.status(201).json(post)
+
+    const newProperty = new Property({
+      title,
+      description,
+      location,
+      maxGuests,
+      pricePerNight,
+      rooms,
+      amenities,
+      userId: user._id,
+      username: user.username,
+    })
+    await newProperty.save()
+
+    res.status(201).json(newProperty)
   } catch (error) {
-    res.status(400).json({ message: 'Error creating post', error })
+    res.status(400).json({ message: 'Error creating property', error })
   }
 })
 
-
-router.get('/', async (_req, res) => {
+//using _ to indicates an unused parameter, will be used later
+router.get('/', async (_: Request, res: Response) => {
   try {
-    const posts = await Post.find().sort({ createdAt: -1 }).populate('userId', 'username')
-    
-    const postsWithUserInfo = posts.map(post => ({
-      ...post.toObject(),
-      user: post.userId ? { username: (post.userId as any).username } : null
+    const properties = await Property.find().sort({ createdAt: -1 }).populate('userId', 'username')
+
+    const propertiesWithUserInfo = properties.map(property => ({
+      ...property.toObject(),
+      user: property.userId ? { username: (property.userId as any).username } : null
     }))
 
-    res.json(postsWithUserInfo)
+    res.json(propertiesWithUserInfo)
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching posts', error })
+    res.status(500).json({ message: 'Error fetching properties', error })
   }
 })
+
 
 export default router
