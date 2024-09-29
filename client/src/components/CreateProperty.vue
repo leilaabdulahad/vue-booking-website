@@ -30,6 +30,24 @@
         <label for="amenities">Amenities (comma separated):</label>
         <input id="amenities" v-model="amenities" required />
       </div>
+      <div>
+        <label for="images">Images (select up to 10):</label>
+        <input 
+          type="file" 
+          id="images" 
+          multiple 
+          @change="handleFileUpload" 
+          accept="image/*"
+        />
+      </div>
+      <div v-if="selectedFiles.length > 0">
+        <p>Selected files:</p>
+        <ul>
+          <li v-for="(file, index) in selectedFiles" :key="index">
+            {{ file.name }}
+          </li>
+        </ul>
+      </div>
       <button type="submit">Create Property</button>
     </form>
     <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
@@ -37,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useAuth } from 'vue-clerk'
 import axios from 'axios'
 
@@ -49,39 +67,58 @@ const pricePerNight = ref(0)
 const rooms = ref(0)
 const amenities = ref('')
 const errorMessage = ref<string | null>(null)
+const selectedFiles = ref<File[]>([])
+const { userId } = useAuth()
 
-const { userId } = useAuth();
+const handleFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files) {
+    selectedFiles.value = Array.from(target.files).slice(0, 10) // Limit to 10 files
+  }
+}
 
 const createProperty = async () => {
   try {
-    const amenitiesArray = amenities.value.split(',').map(item => item.trim())
+    const formData = new FormData()
+    formData.append('title', title.value)
+    formData.append('description', description.value)
+    formData.append('location', location.value)
+    formData.append('maxGuests', maxGuests.value.toString())
+    formData.append('pricePerNight', pricePerNight.value.toString())
+    formData.append('rooms', rooms.value.toString())
+    formData.append('amenities', amenities.value)
+    formData.append('clerkUserId', userId.value || '')
+    console.log('Clerk User ID:', userId.value);
 
-    const response = await axios.post('http://localhost:5000/api/properties', {
-      title: title.value,
-      description: description.value,
-      location: location.value,
-      maxGuests: maxGuests.value,
-      pricePerNight: pricePerNight.value,
-      rooms: rooms.value,
-      amenities: amenitiesArray,
-      clerkUserId: userId.value,
+
+    selectedFiles.value.forEach((file) => {
+      formData.append('images', file)
+    })
+
+    const response = await axios.post('http://localhost:5000/api/properties', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     })
 
     console.log('Property created:', response.data)
-    
-    title.value = ''
-    description.value = ''
-    location.value = ''
-    maxGuests.value = 0
-    pricePerNight.value = 0
-    rooms.value = 0
-    amenities.value = ''
-    errorMessage.value = null
-
+    resetForm()
   } catch (error) {
     console.error('Error creating property:', error)
     errorMessage.value = 'Failed to create property. Please try again.'
   }
+}
+
+const resetForm = () => {
+  title.value = ''
+  description.value = ''
+  location.value = ''
+  maxGuests.value = 0
+  pricePerNight.value = 0
+  rooms.value = 0
+  amenities.value = ''
+  selectedFiles.value = []
+  errorMessage.value = null
 }
 </script>
 
@@ -90,17 +127,21 @@ const createProperty = async () => {
   max-width: 500px;
   margin: 0 auto;
 }
+
 form div {
   margin-bottom: 1rem;
 }
+
 label {
   display: block;
   margin-bottom: 0.5rem;
 }
+
 input, textarea {
   width: 100%;
   padding: 0.5rem;
 }
+
 button {
   background-color: #4CAF50;
   color: white;
@@ -108,6 +149,7 @@ button {
   border: none;
   cursor: pointer;
 }
+
 .error-message {
   color: red;
   margin-top: 1rem;

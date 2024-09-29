@@ -11,20 +11,21 @@ interface IProperty extends Document {
   pricePerNight: number
   rooms: number
   amenities: string[]
+  images: string[]  
 }
 
-// Define the schema for a Property
 const PropertySchema: Schema = new Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
   location: { type: String, required: true },
   maxGuests: { type: Number, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  username: { type: String, required: true }, 
+  username: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   pricePerNight: { type: Number, required: true },
   rooms: { type: Number, required: true },
-  amenities: { type: [String], required: true } 
+  amenities: { type: [String], required: true },
+  images: { type: [String], default: [] }  
 }, { timestamps: true })
 
 export default mongoose.model<IProperty>('Property', PropertySchema)

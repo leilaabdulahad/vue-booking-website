@@ -10,4 +10,5 @@
     pricePerNight: number
     rooms: number
     amenities: string[]
+    images: string[]
   }
