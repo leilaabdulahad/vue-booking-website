@@ -6,3 +6,9 @@
 //     email: string
 //     birthday: string
 // }
+
+interface User {
+    clerkUserId: string;
+    username: string;
+    email: string;
+}
