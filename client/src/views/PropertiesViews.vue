@@ -1,6 +1,5 @@
 <template>
-    <div>
-      <h1>Create New Property</h1>
+    <div class="property-list-views">
       <PropertyList />
     </div>
   </template>
@@ -10,5 +9,8 @@
   </script>
   
   <style scoped>
+  .property-list-views{
+    margin: 100px;
+  }
   </style>
   
