@@ -2,12 +2,14 @@
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from 'vue-clerk'
 import CreateProperty from './components/CreateProperty.vue'
 import PropertyList from './components/PropertyList.vue'
+import UserAuth from './components/UserAuth.vue'
 
 const { isLoaded, isSignedIn, user } = useUser()
 </script>
 
 <template>
   <div class="app">
+    <UserAuth />
     <div v-if="!isLoaded">
       Loading...
     </div>

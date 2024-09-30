@@ -3,6 +3,7 @@ import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 import cors from 'cors'
 import propertyRoutes from '../routes/properties'
+import userRoutes from '../routes/users'
 
 dotenv.config()
 
@@ -11,6 +12,7 @@ const PORT = process.env.PORT || 5000
 
 app.use(cors())
 app.use(express.json())
+app.use('/api/users', userRoutes)
 
 const MONGODB_URI = process.env.MONGODB_URI
 
