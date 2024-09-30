@@ -7,6 +7,18 @@ import upload from '../middleware/upload'
 
 const router = express.Router()
 
+// GET all properties
+router.get('/', async (_req: Request, res: Response) => {
+  try {
+    const properties = await Property.find().sort({ createdAt: -1 });
+    res.json(properties);
+  } catch (error) {
+    console.error('Error fetching properties:', error);
+    res.status(500).json({ message: 'Error fetching properties', error });
+  }
+});
+
+// POST new property
 router.post('/', upload.array('images', 10), async (req: Request, res: Response) => {
   try {
     const {

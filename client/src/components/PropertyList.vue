@@ -28,7 +28,11 @@ const fetchProperties = async () => {
     loading.value = false
   } catch (err) {
     console.error('Error fetching properties:', err)
-    error.value = 'Error fetching properties'
+    if (axios.isAxiosError(err)) {
+      error.value = `Error fetching properties: ${err.message}. ${err.response?.data?.message || ''}`
+    } else {
+      error.value = 'An unexpected error occurred while fetching properties'
+    }
     loading.value = false
   }
 }
