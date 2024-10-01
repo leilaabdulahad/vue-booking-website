@@ -4,7 +4,6 @@
     <div v-if="!isSignedIn">
       <p>Please sign in to create a property.</p>
       <SignInButton />
-
     </div>
     <form v-else @submit.prevent="createProperty">
       <div>
@@ -16,8 +15,12 @@
         <textarea id="description" v-model="description" required></textarea>
       </div>
       <div>
-        <label for="location">Location:</label>
-        <input id="location" v-model="location" required />
+        <label for="country">Country:</label>
+        <input id="country" v-model="country" required />
+      </div>
+      <div>
+        <label for="city">City:</label>
+        <input id="city" v-model="city" required />
       </div>
       <div>
         <label for="maxGuests">Max Guests:</label>
@@ -70,7 +73,8 @@ import axios from 'axios'
 
 const title = ref('')
 const description = ref('')
-const location = ref('')
+const country = ref('')  // New country field
+const city = ref('')     // New city field
 const maxGuests = ref(0)
 const pricePerNight = ref(0)
 const rooms = ref(0)
@@ -111,7 +115,8 @@ const createProperty = async () => {
     const formData = new FormData()
     formData.append('title', title.value)
     formData.append('description', description.value)
-    formData.append('location', location.value)
+    formData.append('country', country.value) 
+    formData.append('city', city.value)       
     formData.append('maxGuests', maxGuests.value.toString())
     formData.append('pricePerNight', pricePerNight.value.toString())
     formData.append('rooms', rooms.value.toString())
@@ -140,7 +145,8 @@ const createProperty = async () => {
 const resetForm = () => {
   title.value = ''
   description.value = ''
-  location.value = ''
+  country.value = ''
+  city.value = ''  
   maxGuests.value = 0
   pricePerNight.value = 0
   rooms.value = 0
@@ -150,6 +156,7 @@ const resetForm = () => {
   errorMessage.value = null
 }
 </script>
+
 
 <style scoped>
 .create-property {
