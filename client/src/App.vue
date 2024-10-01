@@ -7,7 +7,6 @@
 </template>
 
 <script setup lang="ts">
-import { useUser } from 'vue-clerk'
 import Navbar from './components/Navbar.vue'
 import UserAuth from './components/UserAuth.vue'
 </script>

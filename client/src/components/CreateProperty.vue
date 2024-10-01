@@ -1,7 +1,12 @@
 <template>
   <div class="create-property">
     <h2>Create a New Property</h2>
-    <form @submit.prevent="createProperty">
+    <div v-if="!isSignedIn">
+      <p>Please sign in to create a property.</p>
+      <SignInButton />
+
+    </div>
+    <form v-else @submit.prevent="createProperty">
       <div>
         <label for="title">Title:</label>
         <input id="title" v-model="title" required />
@@ -55,8 +60,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useAuth } from 'vue-clerk'
+import { ref, watch } from 'vue'
+import { SignInButton, useUser } from 'vue-clerk'
 import axios from 'axios'
 
 const title = ref('')
@@ -68,16 +73,35 @@ const rooms = ref(0)
 const amenities = ref('')
 const errorMessage = ref<string | null>(null)
 const selectedFiles = ref<File[]>([])
-const { userId } = useAuth()
+
+const { isSignedIn, user } = useUser()
+
+watch([isSignedIn, user], async ([newIsSignedIn, newUser]) => {
+  if (newIsSignedIn && newUser) {
+    try {
+      await axios.post('http://localhost:5000/api/users', {
+        clerkUserId: newUser.id
+      })
+      console.log('User synced with database')
+    } catch (error) {
+      console.error('Error syncing user with database:', error)
+    }
+  }
+}, { immediate: true })
 
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
   if (target.files) {
-    selectedFiles.value = Array.from(target.files).slice(0, 10) // Limit to 10 files
+    selectedFiles.value = Array.from(target.files).slice(0, 10) 
   }
 }
 
 const createProperty = async () => {
+  if (!isSignedIn.value || !user.value) {
+    errorMessage.value = 'You must be signed in to create a property.'
+    return
+  }
+
   try {
     const formData = new FormData()
     formData.append('title', title.value)
@@ -87,9 +111,7 @@ const createProperty = async () => {
     formData.append('pricePerNight', pricePerNight.value.toString())
     formData.append('rooms', rooms.value.toString())
     formData.append('amenities', amenities.value)
-    formData.append('clerkUserId', userId.value || '')
-    console.log('Clerk User ID:', userId.value);
-
+    formData.append('clerkUserId', user.value.id)
 
     selectedFiles.value.forEach((file) => {
       formData.append('images', file)
@@ -143,7 +165,7 @@ input, textarea {
 }
 
 button {
-  background-color: #4CAF50;
+  background-color: #6b6b6b;
   color: white;
   padding: 0.5rem 1rem;
   border: none;
