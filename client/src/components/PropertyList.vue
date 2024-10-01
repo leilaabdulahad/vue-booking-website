@@ -1,17 +1,51 @@
+<template>
+  <div class="property-list">
+    <h2>Recent Properties</h2>
+    <PropertyFilter @filter="applyFilter" /> 
+    
+    <div v-if="loading">Loading...</div>
+    <div v-else-if="error">{{ error }}</div>
+    <div v-else-if="properties.length === 0">No properties available</div>
+    
+    <ul v-else>
+      <li v-for="property in properties" :key="property._id" class="property-item">
+        <router-link :to="{ name: 'PropertyDetail', params: { id: property._id } }">
+          <h3>{{ property.title }}</h3>
+          <div class="image-gallery" v-if="property.images && property.images.length > 0">
+            <img v-for="(image, index) in property.images" :key="index" :src="image" :alt="`Property image ${index + 1}`" />
+          </div>
+          <p>{{ property.description }}</p>
+          <p><strong>City:</strong> {{ property.location.city }}</p>
+          <p><strong>Country:</strong> {{ property.location.country }}</p>
+          <p><strong>Max Guests:</strong> {{ property.maxGuests }}</p>
+          <p><strong>Price Per Night:</strong> ${{ property.pricePerNight }}</p>
+          <p><strong>Rooms:</strong> {{ property.rooms }}</p>
+          <p><strong>Beds:</strong> {{ property.beds }}</p>
+          <p><strong>Amenities:</strong> {{ property.amenities.join(', ') }}</p>
+          <p><strong>Posted by:</strong> {{ property.username || 'Unknown user' }}</p>
+          <p><small>Posted on: {{ new Date(property.createdAt).toLocaleString() }}</small></p>
+        </router-link>
+      </li>
+    </ul>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import PropertyFilter from './PropertyFilter.vue' 
 
 const properties = ref<Property[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
 
-const fetchProperties = async () => {
+const fetchProperties = async (country = '', city = '') => {
   try {
     loading.value = true
-    const response = await axios.get<Property[]>('http://localhost:5000/api/properties')
+    const response = await axios.get<Property[]>('http://localhost:5000/api/properties', {
+      params: { country, city }, 
+    })
     properties.value = response.data
-    loading.value = false
   } catch (err) {
     console.error('Error fetching properties:', err)
     if (axios.isAxiosError(err)) {
@@ -19,38 +53,17 @@ const fetchProperties = async () => {
     } else {
       error.value = 'An unexpected error occurred while fetching properties'
     }
+  } finally {
     loading.value = false
   }
 }
 
-onMounted(fetchProperties)
-</script>
+const applyFilter = (filter: Filter) => {
+  fetchProperties(filter.country, filter.city)
+}
 
-<template>
-  <div class="property-list">
-    <h2>Recent Properties</h2>
-    <div v-if="loading">Loading...</div>
-    <div v-else-if="error">{{ error }}</div>
-    <div v-else-if="properties.length === 0">No properties available</div>
-    <ul v-else>
-      <li v-for="property in properties" :key="property._id" class="property-item">
-        <h3>{{ property.title }}</h3>
-        <div class="image-gallery" v-if="property.images && property.images.length > 0">
-          <img v-for="(image, index) in property.images" :key="index" :src="image" :alt="`Property image ${index + 1}`" />
-        </div>
-        <p>{{ property.description }}</p>
-        <p><strong>Location:</strong> {{ property.location }}</p>
-        <p><strong>Max Guests:</strong> {{ property.maxGuests }}</p>
-        <p><strong>Price Per Night:</strong> ${{ property.pricePerNight }}</p>
-        <p><strong>Rooms:</strong> {{ property.rooms }}</p>
-        <p><strong>Beds:</strong>{{ property.beds }}</p>
-        <p><strong>Amenities:</strong> {{ property.amenities.join(', ') }}</p>
-        <p><strong>Posted by:</strong> {{ property.username || 'Unknown user' }}</p>
-        <p><small>Posted on: {{ new Date(property.createdAt).toLocaleString() }}</small></p>
-      </li>
-    </ul>
-  </div>
-</template>
+onMounted(() => fetchProperties())
+</script>
 
 <style scoped>
 .property-list {
