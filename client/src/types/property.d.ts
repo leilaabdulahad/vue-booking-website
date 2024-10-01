@@ -9,6 +9,7 @@
     createdAt: string
     pricePerNight: number
     rooms: number
+    beds: number
     amenities: string[]
     images: string[]
   }

@@ -28,6 +28,7 @@ router.post('/', upload.array('images', 10), async (req: Request, res: Response)
       maxGuests,
       pricePerNight,
       rooms,
+      beds,
       amenities,
       clerkUserId
     } = req.body
@@ -57,6 +58,7 @@ router.post('/', upload.array('images', 10), async (req: Request, res: Response)
       maxGuests,
       pricePerNight,
       rooms,
+      beds,
       amenities: amenities.split(',').map((item: string) => item.trim()),
       userId: user._id,
       username: user.username,

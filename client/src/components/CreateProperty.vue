@@ -32,6 +32,10 @@
         <input id="rooms" type="number" v-model="rooms" required />
       </div>
       <div>
+        <label for="beds">Beds:</label>
+        <input id="beds" type="number" v-model="beds" required />
+      </div>
+      <div>
         <label for="amenities">Amenities (comma separated):</label>
         <input id="amenities" v-model="amenities" required />
       </div>
@@ -70,6 +74,7 @@ const location = ref('')
 const maxGuests = ref(0)
 const pricePerNight = ref(0)
 const rooms = ref(0)
+const beds = ref(0)
 const amenities = ref('')
 const errorMessage = ref<string | null>(null)
 const selectedFiles = ref<File[]>([])
@@ -110,6 +115,7 @@ const createProperty = async () => {
     formData.append('maxGuests', maxGuests.value.toString())
     formData.append('pricePerNight', pricePerNight.value.toString())
     formData.append('rooms', rooms.value.toString())
+    formData.append('beds', beds.value.toString())
     formData.append('amenities', amenities.value)
     formData.append('clerkUserId', user.value.id)
 
@@ -138,6 +144,7 @@ const resetForm = () => {
   maxGuests.value = 0
   pricePerNight.value = 0
   rooms.value = 0
+  beds.value = 0
   amenities.value = ''
   selectedFiles.value = []
   errorMessage.value = null

@@ -10,6 +10,7 @@ interface IProperty extends Document {
   createdAt: Date
   pricePerNight: number
   rooms: number
+  beds: number
   amenities: string[]
   images: string[]  
 }
@@ -24,6 +25,7 @@ const PropertySchema: Schema = new Schema({
   createdAt: { type: Date, default: Date.now },
   pricePerNight: { type: Number, required: true },
   rooms: { type: Number, required: true },
+  beds: { type: Number, required: true},
   amenities: { type: [String], required: true },
   images: { type: [String], default: [] }  
 }, { timestamps: true })

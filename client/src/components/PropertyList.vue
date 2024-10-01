@@ -2,20 +2,6 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
-interface Property {
-  _id: string
-  title: string
-  description: string
-  location: string
-  maxGuests: number
-  pricePerNight: number
-  rooms: number
-  amenities: string[]
-  username: string
-  createdAt: string
-  images: string[]
-}
-
 const properties = ref<Property[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
@@ -57,6 +43,7 @@ onMounted(fetchProperties)
         <p><strong>Max Guests:</strong> {{ property.maxGuests }}</p>
         <p><strong>Price Per Night:</strong> ${{ property.pricePerNight }}</p>
         <p><strong>Rooms:</strong> {{ property.rooms }}</p>
+        <p><strong>Beds:</strong>{{ property.beds }}</p>
         <p><strong>Amenities:</strong> {{ property.amenities.join(', ') }}</p>
         <p><strong>Posted by:</strong> {{ property.username || 'Unknown user' }}</p>
         <p><small>Posted on: {{ new Date(property.createdAt).toLocaleString() }}</small></p>
