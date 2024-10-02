@@ -1,12 +1,10 @@
 <template>
   <div class="property-list">
     <h2>Recent Properties</h2>
-    <PropertyFilter @filter="applyFilter" /> 
-    
+    <PropertyFilter @filter="applyFilter" />
     <div v-if="loading">Loading...</div>
     <div v-else-if="error">{{ error }}</div>
     <div v-else-if="properties.length === 0">No properties available</div>
-    
     <ul v-else>
       <li v-for="property in properties" :key="property._id" class="property-item">
         <router-link :to="{ name: 'PropertyDetail', params: { id: property._id } }">
@@ -25,6 +23,7 @@
           <p><strong>Posted by:</strong> {{ property.username || 'Unknown user' }}</p>
           <p><small>Posted on: {{ new Date(property.createdAt).toLocaleString() }}</small></p>
         </router-link>
+        <BookProperty :propertyId="property._id" />
       </li>
     </ul>
   </div>
@@ -33,7 +32,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
-import PropertyFilter from './PropertyFilter.vue' 
+import PropertyFilter from './PropertyFilter.vue'
+import BookProperty from './BookProperty.vue'
 
 const properties = ref<Property[]>([])
 const loading = ref(true)
@@ -43,7 +43,7 @@ const fetchProperties = async (country = '', city = '') => {
   try {
     loading.value = true
     const response = await axios.get<Property[]>('http://localhost:5000/api/properties', {
-      params: { country, city }, 
+      params: { country, city },
     })
     properties.value = response.data
   } catch (err) {

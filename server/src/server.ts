@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import cors from 'cors'
 import propertyRoutes from '../routes/properties'
 import userRoutes from '../routes/users'
+import bookingRoutes from '../routes/bookingRoutes'
 
 dotenv.config()
 
@@ -13,6 +14,7 @@ const PORT = process.env.PORT || 5000
 app.use(cors())
 app.use(express.json())
 app.use('/api/users', userRoutes)
+app.use('/api/bookings', bookingRoutes)
 
 const MONGODB_URI = process.env.MONGODB_URI
 

@@ -13,14 +13,10 @@
   </template>
   
   <script setup lang="ts">
-  import { ref, defineEmits } from 'vue'
-  
-  interface CitiesMap {
-    [key: string]: string[];
-  }
+  import { ref } from 'vue'
   
   const countries = ['Sverige', 'England', 'Spanien', 'Tyskland']
-  const citiesMap: CitiesMap = {
+  const countryCity: CountryCity = {
     Sverige: ['Stockholm'],
     England: ['London'],
     Spanien: ['Barcelona'],
@@ -32,7 +28,7 @@
   const cities = ref<string[]>([])
   
   const fetchCities = () => {
-    cities.value = citiesMap[selectedCountry.value] || []
+    cities.value = countryCity[selectedCountry.value] || []
     selectedCity.value = ''
   }
   

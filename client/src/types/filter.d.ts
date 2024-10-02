@@ -1,4 +1,4 @@
 interface Filter {
-   country: string
-   city: string 
+   country?: string
+   city?: string 
 }
