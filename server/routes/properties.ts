@@ -9,17 +9,19 @@ const router = express.Router()
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { country, city } = req.query
-    const filters: any = {}
+    const { search } = req.query
+    let filter = {}
 
-    if (country) {
-      filters['location.country'] = country
-    }
-    if (city) {
-      filters['location.city'] = city
+    if (search) {
+      filter = {
+        $or: [
+          { 'location.country': { $regex: search, $options: 'i' } },
+          { 'location.city': { $regex: search, $options: 'i' } }
+        ]
+      }
     }
 
-    const properties = await Property.find(filters).sort({ createdAt: -1 })
+    const properties = await Property.find(filter).sort({ createdAt: -1 })
     return res.json(properties)
   } catch (error) {
     console.error('Error fetching properties:', error)

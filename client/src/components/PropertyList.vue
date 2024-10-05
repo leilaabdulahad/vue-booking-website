@@ -1,12 +1,12 @@
 <template>
   <div class="property-list">
     <h2>Recent Properties</h2>
-    <PropertyFilter @filter="applyFilter" />
-    <div v-if="loading">Loading...</div>
-    <div v-else-if="error">{{ error }}</div>
-    <div v-else-if="properties.length === 0">No properties available</div>
-    <ul v-else>
-      <li v-for="property in properties" :key="property._id" class="property-item">
+    <SearchFilter @search="applySearch" />
+    <div v-if="showLoading" class="loading-indicator">Loading...</div>
+    <div v-if="error">{{ error }}</div>
+    <div v-if="!loading && filteredProperties.length === 0">No properties available</div>
+    <TransitionGroup name="property-list" tag="ul">
+      <li v-for="property in filteredProperties" :key="property._id" class="property-item">
         <router-link :to="{ name: 'PropertyDetail', params: { id: property._id } }">
           <h3>{{ property.title }}</h3>
           <div class="image-gallery" v-if="property.images && property.images.length > 0">
@@ -25,27 +25,39 @@
         </router-link>
         <BookProperty :propertyId="property._id" />
       </li>
-    </ul>
+    </TransitionGroup>
   </div>
 </template>
 
+
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import axios from 'axios'
-import PropertyFilter from './PropertyFilter.vue'
+import debounce from 'lodash/debounce'
 import BookProperty from './BookProperty.vue'
+import SearchFilter from './SearchFilter.vue'
 
 const properties = ref<Property[]>([])
-const loading = ref(true)
+const loading = ref(false)
+const showLoading = ref(false)
 const error = ref<string | null>(null)
+const searchQuery = ref('')
 
-const fetchProperties = async (country = '', city = '') => {
+const filteredProperties = computed(() => {
+  if (!searchQuery.value) return properties.value
+  const query = searchQuery.value.toLowerCase()
+  return properties.value.filter(property => 
+    property.location.country.toLowerCase().includes(query) ||
+    property.location.city.toLowerCase().includes(query)
+  )
+})
+
+const fetchProperties = async () => {
   try {
     loading.value = true
-    const response = await axios.get<Property[]>('http://localhost:5000/api/properties', {
-      params: { country, city },
-    })
+    const response = await axios.get<Property[]>('http://localhost:5000/api/properties')
     properties.value = response.data
+    error.value = null
   } catch (err) {
     console.error('Error fetching properties:', err)
     if (axios.isAxiosError(err)) {
@@ -53,14 +65,31 @@ const fetchProperties = async (country = '', city = '') => {
     } else {
       error.value = 'An unexpected error occurred while fetching properties'
     }
+    properties.value = []
   } finally {
     loading.value = false
   }
 }
 
-const applyFilter = (filter: Filter) => {
-  fetchProperties(filter.country, filter.city)
+const debouncedSearch = debounce((query: string) => {
+  searchQuery.value = query
+}, 300)
+
+const applySearch = (query: string) => {
+  debouncedSearch(query)
 }
+
+watch(loading, (newValue) => {
+  if (newValue) {
+    setTimeout(() => {
+      if (loading.value) {
+        showLoading.value = true
+      }
+    }, 500)
+  } else {
+    showLoading.value = false
+  }
+})
 
 onMounted(() => fetchProperties())
 </script>
@@ -89,5 +118,26 @@ h3 {
   width: 150px;
   height: 150px;
   object-fit: cover;
+}
+.loading-indicator {
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+  color: #666;
+}
+
+.property-list-enter-active,
+.property-list-leave-active {
+  transition: all 0.5s ease;
+}
+
+.property-list-enter-from,
+.property-list-leave-to {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.property-list-move {
+  transition: transform 0.5s ease;
 }
 </style>
