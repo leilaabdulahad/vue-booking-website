@@ -14,8 +14,9 @@ const BookingSchema: Schema = new Schema({
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   totalPrice: { type: Number, required: true },
-  status: { type: String, enum: ['pending', 'confirmed', 'cancelled'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'confirmed', 'cancelled'], default: 'confirmed' },
   createdAt: { type: Date, default: Date.now },
 })
 
 export default mongoose.model<IBooking>('Booking', BookingSchema)
+
