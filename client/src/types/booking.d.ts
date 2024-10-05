@@ -6,5 +6,6 @@
   totalPrice: number
   status: 'pending' | 'confirmed' | 'cancelled'
   createdAt: Date
+  username: string
 }
 

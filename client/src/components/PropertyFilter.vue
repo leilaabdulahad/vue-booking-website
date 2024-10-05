@@ -17,7 +17,7 @@
   
   const countries = ['Sverige', 'England', 'Spanien', 'Tyskland']
   const countryCity: CountryCity = {
-    Sverige: ['Stockholm'],
+    Sverige: ['Stockholm', 'Borås'],
     England: ['London'],
     Spanien: ['Barcelona'],
     Tyskland: ['Berlin'],

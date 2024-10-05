@@ -7,6 +7,7 @@ interface IBooking extends Document {
   totalPrice: number
   status: 'pending' | 'confirmed' | 'cancelled'
   createdAt: Date
+  username: string
 }
 
 const BookingSchema: Schema = new Schema({
@@ -16,6 +17,7 @@ const BookingSchema: Schema = new Schema({
   totalPrice: { type: Number, required: true },
   status: { type: String, enum: ['pending', 'confirmed', 'cancelled'], default: 'confirmed' },
   createdAt: { type: Date, default: Date.now },
+  username: { type: String, required: true}
 })
 
 export default mongoose.model<IBooking>('Booking', BookingSchema)

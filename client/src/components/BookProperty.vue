@@ -32,6 +32,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import { useUser } from 'vue-clerk'
 
 const props = defineProps<{
   propertyId: string
@@ -45,32 +46,42 @@ const error = ref('')
 const success = ref('')
 const isLoading = ref(false)
 
+const { user } = useUser()
+
 const fetchUnavailableDates = async () => {
   try {
     const response = await axios.get(`http://localhost:5000/api/bookings/unavailable/${props.propertyId}`)
     unavailableDates.value = response.data.unavailableDates.map((booking: any) => ({
       startDate: new Date(booking.startDate),
-      endDate: new Date(booking.endDate)
-    }));
+      endDate: new Date(booking.endDate),
+    }))
   } catch (err) {
     console.error('Error fetching unavailable dates:', err)
   }
 }
 
 onMounted(() => {
-  fetchUnavailableDates();
-});
+  fetchUnavailableDates()
+})
 
 const bookProperty = async () => {
   isLoading.value = true
   error.value = ''
   success.value = ''
 
+  //making sure user is defined before accessing user.id
+  if (!user.value) {
+    error.value = 'User not authenticated.'
+    isLoading.value = false
+    return
+  }
+
   try {
     const response = await axios.post('http://localhost:5000/api/bookings', {
       propertyId: props.propertyId,
       startDate: startDate.value,
       endDate: endDate.value,
+      clerkUserId: user.value.id,
     })
     success.value = 'Booking successful!'
     startDate.value = ''
@@ -88,6 +99,7 @@ const bookProperty = async () => {
   }
 }
 </script>
+
 
 <style scoped>
 .book-property {
