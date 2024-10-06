@@ -19,6 +19,7 @@
           <router-link to="/" class="navbar-item">Home</router-link>
           <router-link to="/properties" class="navbar-item">Properties</router-link>
           <router-link to="/create-property" class="navbar-item">Create Property</router-link>
+          <router-link to="/favorites" class="navbar-item">Favorites</router-link>
           <div class="navbar-item auth-buttons">
             <SignedIn>
               <UserButton />
