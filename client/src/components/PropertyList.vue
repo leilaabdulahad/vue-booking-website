@@ -7,7 +7,7 @@
     <div v-if="!loading && filteredProperties.length === 0">No properties available</div>
     <TransitionGroup name="property-list" tag="ul">
       <li v-for="property in filteredProperties" :key="property._id" class="property-item">
-        <router-link :to="{ name: 'PropertyDetail', params: { id: property._id } }">
+  <router-link :to="{ name: 'PropertyDetail', params: { id: property._id } }">
           <h3>{{ property.title }}</h3>
           <div class="image-gallery" v-if="property.images && property.images.length > 0">
             <img v-for="(image, index) in property.images" :key="index" :src="image" :alt="`Property image ${index + 1}`" />
@@ -24,11 +24,11 @@
           <p><small>Posted on: {{ new Date(property.createdAt).toLocaleString() }}</small></p>
         </router-link>
         <BookProperty :propertyId="property._id" />
+        <button @click="addToFavorites(property._id)">Add to Favorites</button>
       </li>
     </TransitionGroup>
   </div>
 </template>
-
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
@@ -36,12 +36,31 @@ import axios from 'axios'
 import debounce from 'lodash/debounce'
 import BookProperty from './BookProperty.vue'
 import SearchFilter from './SearchFilter.vue'
+import { useUser } from 'vue-clerk'
 
 const properties = ref<Property[]>([])
 const loading = ref(false)
 const showLoading = ref(false)
 const error = ref<string | null>(null)
 const searchQuery = ref('')
+
+const { user } = useUser()
+
+const addToFavorites = async (propertyId: string) => {
+  if (!user.value) return alert('Please sign in to add favorites.')
+
+  try {
+    await axios.post('http://localhost:5000/api/favorites', {
+      clerkUserId: user.value.id,
+      propertyId,
+    })
+    alert('Property added to favorites!')
+  } catch (error) {
+    console.error('Error adding favorite:', error)
+    alert('Failed to add favorite.')
+  }
+}
+
 
 const filteredProperties = computed(() => {
   if (!searchQuery.value) return properties.value
