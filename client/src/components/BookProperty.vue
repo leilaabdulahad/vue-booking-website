@@ -1,34 +1,3 @@
-<template>
-  <div class="book-property">
-    <h3>Book this property</h3>
-    <form @submit.prevent="bookProperty">
-      <div>
-        <label for="startDate">Check-in:</label>
-        <input 
-          type="date" 
-          id="startDate" 
-          v-model="startDate" 
-          :min="minDate" 
-          required 
-        />
-      </div>
-      <div>
-        <label for="endDate">Check-out:</label>
-        <input 
-          type="date" 
-          id="endDate" 
-          v-model="endDate" 
-          :min="startDate" 
-          required 
-        />
-      </div>
-      <button type="submit" :disabled="isLoading">{{ isLoading ? 'Booking...' : 'Book Now' }}</button>
-    </form>
-    <p v-if="error" class="error">{{ error }}</p>
-    <p v-if="success" class="success">{{ success }}</p>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
@@ -100,6 +69,36 @@ const bookProperty = async () => {
 }
 </script>
 
+<template>
+  <div class="book-property">
+    <h3>Book this property</h3>
+    <form @submit.prevent="bookProperty">
+      <div>
+        <label for="startDate">Check-in:</label>
+        <input 
+          type="date" 
+          id="startDate" 
+          v-model="startDate" 
+          :min="minDate" 
+          required 
+        />
+      </div>
+      <div>
+        <label for="endDate">Check-out:</label>
+        <input 
+          type="date" 
+          id="endDate" 
+          v-model="endDate" 
+          :min="startDate" 
+          required 
+        />
+      </div>
+      <button type="submit" :disabled="isLoading">{{ isLoading ? 'Booking...' : 'Book Now' }}</button>
+    </form>
+    <p v-if="error" class="error">{{ error }}</p>
+    <p v-if="success" class="success">{{ success }}</p>
+  </div>
+</template>
 
 <style scoped>
 .book-property {

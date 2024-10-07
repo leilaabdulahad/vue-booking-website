@@ -1,14 +1,3 @@
-<template>
-  <div>
-    <input 
-      v-model="searchQuery" 
-      @input="debounceSearch"
-      placeholder="Search for a country or city..."
-      type="text"
-    />
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref } from 'vue'
 import debounce from 'lodash/debounce'
@@ -21,6 +10,17 @@ const debounceSearch = debounce((event: Event) => {
   emit('search', target.value)
 }, 300)
 </script>
+
+<template>
+  <div>
+    <input 
+      v-model="searchQuery" 
+      @input="debounceSearch"
+      placeholder="Search for a country or city..."
+      type="text"
+    />
+  </div>
+</template>
 
 <style scoped>
 input {

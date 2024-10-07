@@ -18,6 +18,3 @@ watch([isSignedIn, user], async ([newIsSignedIn, newUser]) => {
   }
 }, { immediate: true })
 </script>
-
-<template>
-</template>

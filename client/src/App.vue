@@ -1,15 +1,15 @@
-<template>
-  <div class="app">
-    <Navbar />
-    <router-view></router-view>
-    <UserAuth />
-  </div>
-</template>
-
 <script setup lang="ts">
 import Navbar from './components/Navbar.vue'
 import UserAuth from './components/UserAuth.vue'
 </script>
+
+<template>
+  <div class="app">
+    <Navbar />
+    <router-view />
+    <UserAuth />
+  </div>
+</template>
 
 <style scoped>
 .app{

@@ -17,4 +17,6 @@ interface Property {
   beds: number
   amenities: string[]
   images: string[]
+  isFavorite?: boolean 
 }
+

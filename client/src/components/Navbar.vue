@@ -1,48 +1,49 @@
-<template>
-    <nav class="navbar">
-      <div class="navbar-container">
-        <router-link to="/" class="navbar-brand">
-          Property App
-        </router-link>
-        <button
-          class="navbar-burger"
-          @click="toggleMenu"
-          :class="{ 'is-active': isMenuActive }"
-          aria-label="menu"
-          :aria-expanded="isMenuActive"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-        <div class="navbar-menu" :class="{ 'is-active': isMenuActive }">
-          <router-link to="/" class="navbar-item">Home</router-link>
-          <router-link to="/properties" class="navbar-item">Properties</router-link>
-          <router-link to="/create-property" class="navbar-item">Create Property</router-link>
-          <router-link to="/favorites" class="navbar-item">Favorites</router-link>
-          <div class="navbar-item auth-buttons">
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-            <SignedOut>
-              <SignInButton />
-            </SignedOut>
-          </div>
-        </div>
-      </div>
-    </nav>
-  </template>
-  
-  <script setup lang="ts">
-  import { ref } from 'vue';
-  import { SignedIn, SignedOut, UserButton, SignInButton } from 'vue-clerk';
+<script setup lang="ts">
+  import { ref } from 'vue'
+  import { SignedIn, SignedOut, UserButton, SignInButton } from 'vue-clerk'
   
   const isMenuActive = ref(false);
   
   const toggleMenu = () => {
     isMenuActive.value = !isMenuActive.value;
-  };
+  }
   </script>
+
+<template>
+  <nav class="navbar">
+    <div class="navbar-container">
+      <router-link to="/" class="navbar-brand">
+        Property App
+      </router-link>
+      <button
+        class="navbar-burger"
+        @click="toggleMenu"
+        :class="{ 'is-active': isMenuActive }"
+        aria-label="menu"
+        :aria-expanded="isMenuActive"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <div class="navbar-menu" :class="{ 'is-active': isMenuActive }">
+        <router-link to="/" class="navbar-item">Home</router-link>
+        <router-link to="/properties" class="navbar-item">Properties</router-link>
+        <router-link to="/create-property" class="navbar-item">Create Property</router-link>
+        <router-link to="/favorites" class="navbar-item">Favorites</router-link>
+        <div class="navbar-item auth-buttons">
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
+          <SignedOut>
+            <SignInButton />
+          </SignedOut>
+        </div>
+      </div>
+    </div>
+  </nav>
+</template>
+
   
   <style scoped>
   .navbar {

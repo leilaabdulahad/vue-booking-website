@@ -1,37 +1,3 @@
-<template>
-  <div class="property-list">
-    <h2>Your Favorite Properties</h2>
-
-    <div v-if="showLoading" class="loading-indicator">Loading...</div>
-    <div v-if="error">{{ error }}</div>
-    <div v-if="!loading && favorites.length === 0">No favorite properties found</div>
-
-    <TransitionGroup name="property-list" tag="ul">
-      <li v-for="property in favorites" :key="property._id" class="property-item">
-        <router-link :to="{ name: 'PropertyDetail', params: { id: property._id } }">
-          <h3>{{ property.title }}</h3>
-          <div class="image-gallery" v-if="property.images && property.images.length > 0">
-            <img v-for="(image, index) in property.images" :key="index" :src="image" :alt="`Property image ${index + 1}`" />
-          </div>
-
-          <p>{{ property.description }}</p>
-          <p><strong>City:</strong> {{ property.location.city }}</p>
-          <p><strong>Country:</strong> {{ property.location.country }}</p>
-          <p><strong>Max Guests:</strong> {{ property.maxGuests }}</p>
-          <p><strong>Price Per Night:</strong> ${{ property.pricePerNight }}</p>
-          <p><strong>Rooms:</strong> {{ property.rooms }}</p>
-          <p><strong>Beds:</strong> {{ property.beds }}</p>
-          <p><strong>Amenities:</strong> {{ property.amenities.join(', ') }}</p>
-          <p><strong>Posted by:</strong> {{ property.username || 'Unknown user' }}</p>
-          <p><small>Posted on: {{ new Date(property.createdAt).toLocaleString() }}</small></p>
-        </router-link>
-        <BookProperty :propertyId="property._id" />
-      </li>
-    </TransitionGroup>
-  </div>
-</template>
-
-
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
@@ -79,6 +45,38 @@ onMounted(() => {
 })
 </script>
 
+<template>
+  <div class="property-list">
+    <h2>Your Favorite Properties</h2>
+
+    <div v-if="showLoading" class="loading-indicator">Loading...</div>
+    <div v-if="error">{{ error }}</div>
+    <div v-if="!loading && favorites.length === 0">No favorite properties found</div>
+
+    <TransitionGroup name="property-list" tag="ul">
+      <li v-for="property in favorites" :key="property._id" class="property-item">
+        <router-link :to="{ name: 'PropertyDetail', params: { id: property._id } }">
+          <h3>{{ property.title }}</h3>
+          <div class="image-gallery" v-if="property.images && property.images.length > 0">
+            <img v-for="(image, index) in property.images" :key="index" :src="image" :alt="`Property image ${index + 1}`" />
+          </div>
+
+          <p>{{ property.description }}</p>
+          <p><strong>City:</strong> {{ property.location.city }}</p>
+          <p><strong>Country:</strong> {{ property.location.country }}</p>
+          <p><strong>Max Guests:</strong> {{ property.maxGuests }}</p>
+          <p><strong>Price Per Night:</strong> ${{ property.pricePerNight }}</p>
+          <p><strong>Rooms:</strong> {{ property.rooms }}</p>
+          <p><strong>Beds:</strong> {{ property.beds }}</p>
+          <p><strong>Amenities:</strong> {{ property.amenities.join(', ') }}</p>
+          <p><strong>Posted by:</strong> {{ property.username || 'Unknown user' }}</p>
+          <p><small>Posted on: {{ new Date(property.createdAt).toLocaleString() }}</small></p>
+        </router-link>
+        <BookProperty :propertyId="property._id" />
+      </li>
+    </TransitionGroup>
+  </div>
+</template>
 
 <style scoped>
 .property-list {
