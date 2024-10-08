@@ -6,7 +6,7 @@ import BookProperty from './BookProperty.vue'
 import SearchFilter from './SearchFilter.vue'
 import { useUser } from 'vue-clerk'
 
-const emit = defineEmits(['favoriteToggled']) // Define emits here
+const emit = defineEmits(['favoriteToggled']) 
 
 const properties = ref<Property[]>([])
 const loading = ref(false)
