@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, defineEmits } from 'vue'
 import axios from 'axios'
 import debounce from 'lodash/debounce'
 import BookProperty from './BookProperty.vue'
 import SearchFilter from './SearchFilter.vue'
 import { useUser } from 'vue-clerk'
+
+const emit = defineEmits(['favoriteToggled']) // Define emits here
 
 const properties = ref<Property[]>([])
 const loading = ref(false)
@@ -20,8 +22,10 @@ const fetchFavorites = async () => {
   if (!user.value) return
   try {
     const response = await axios.get(`http://localhost:5000/api/favorites/${user.value.id}`)
-    favoriteProperties.value = response.data.reduce((acc: Record<string, boolean>, fav: any) => {
-      acc[fav.propertyId] = true
+    const favoriteIds = response.data.map((favorite: {propertyId: string}) => favorite.propertyId)
+    const propertyResponses = await Promise.all(favoriteIds.map((id: string) => axios.get(`http://localhost:5000/api/properties/${id}`)))
+    favoriteProperties.value = propertyResponses.reduce((acc: Record<string, boolean>, propertyResponse: any) => {
+      acc[propertyResponse.data._id] = true
       return acc
     }, {})
   } catch (error) {
@@ -35,7 +39,7 @@ const fetchProperties = async () => {
     const response = await axios.get<Property[]>('http://localhost:5000/api/properties')
     properties.value = response.data
     error.value = null
-    //fetches favorites after properties are loaded
+    // Fetches favorites after properties are loaded
     await fetchFavorites() 
   } catch (err) {
     console.error('Error fetching properties:', err)
@@ -60,6 +64,9 @@ const toggleFavorite = async (propertyId: string) => {
     }
     //updates the local state after successful API call
     favoriteProperties.value[propertyId] = !favoriteProperties.value[propertyId]
+    
+    //emit event to notify other components
+    emit('favoriteToggled', propertyId)
   } catch (error) {
     console.error('Error toggling favorite:', error)
     alert('Failed to update favorite.')
@@ -83,7 +90,6 @@ const removeFromFavorites = async (propertyId: string) => {
   await axios.delete(`http://localhost:5000/api/favorites/${user.value.id}/${propertyId}`);
 }
 
-
 const filteredProperties = computed(() => {
   if (!searchQuery.value) return properties.value
   const query = searchQuery.value.toLowerCase()
@@ -101,7 +107,7 @@ const applySearch = (query: string) => {
   debouncedSearch(query)
 }
 
-//watches for user authentication state
+// Watches for user authentication state
 watch([user, isLoaded], async ([newUser, loaded]) => {
   if (newUser && loaded) {
     await fetchProperties()
@@ -146,6 +152,7 @@ onMounted(async () => {
     </TransitionGroup>
   </div>
 </template>
+
 
 
 <style scoped>

@@ -18,7 +18,9 @@ const fetchFavorites = async () => {
   try {
     loading.value = true
     const response = await axios.get(`http://localhost:5000/api/favorites/${user.value.id}`)
-    favorites.value = response.data
+    const favoriteIds = response.data.map((favorite: { propertyId: string }) => favorite.propertyId)
+    const propertyResponses = await Promise.all(favoriteIds.map((id: string) => axios.get(`http://localhost:5000/api/properties/${id}`)))
+    favorites.value = propertyResponses.map(response => response.data)
     error.value = null
   } catch (err) {
     console.error('Error fetching favorites:', err)
@@ -54,7 +56,7 @@ onMounted(() => {
     <div v-if="!loading && favorites.length === 0">No favorite properties found</div>
 
     <TransitionGroup name="property-list" tag="ul">
-      <li v-for="property in favorites" :key="property._id" class="property-item">
+      <li v-for="(property, index) in favorites" :key="index" class="property-item">
         <router-link :to="{ name: 'PropertyDetail', params: { id: property._id } }">
           <h3>{{ property.title }}</h3>
           <div class="image-gallery" v-if="property.images && property.images.length > 0">
