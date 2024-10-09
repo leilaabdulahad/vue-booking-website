@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch, defineEmits } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
 import debounce from 'lodash/debounce'
 import BookProperty from './BookProperty.vue'
 import SearchFilter from './SearchFilter.vue'
+import FavoritesManager from './FavoriteManager.vue'
 import { useUser } from 'vue-clerk'
 
 const emit = defineEmits(['favoriteToggled']) 
@@ -15,32 +16,12 @@ const error = ref<string | null>(null)
 const searchQuery = ref('')
 const { user, isLoaded } = useUser()
 
-//uses a reactive object instead of a Set
-const favoriteProperties = ref<Record<string, boolean>>({})
-
-const fetchFavorites = async () => {
-  if (!user.value) return
-  try {
-    const response = await axios.get(`http://localhost:5000/api/favorites/${user.value.id}`)
-    const favoriteIds = response.data.map((favorite: {propertyId: string}) => favorite.propertyId)
-    const propertyResponses = await Promise.all(favoriteIds.map((id: string) => axios.get(`http://localhost:5000/api/properties/${id}`)))
-    favoriteProperties.value = propertyResponses.reduce((acc: Record<string, boolean>, propertyResponse: any) => {
-      acc[propertyResponse.data._id] = true
-      return acc
-    }, {})
-  } catch (error) {
-    console.error('Error fetching favorites:', error)
-  }
-}
-
 const fetchProperties = async () => {
   try {
     loading.value = true
     const response = await axios.get<Property[]>('http://localhost:5000/api/properties')
     properties.value = response.data
     error.value = null
-    // Fetches favorites after properties are loaded
-    await fetchFavorites() 
   } catch (err) {
     console.error('Error fetching properties:', err)
     if (axios.isAxiosError(err)) {
@@ -52,42 +33,6 @@ const fetchProperties = async () => {
   } finally {
     loading.value = false
   }
-}
-
-const toggleFavorite = async (propertyId: string) => {
-  if (!user.value) return alert('Please sign in to manage favorites.')
-  try {
-    if (favoriteProperties.value[propertyId]) {
-      await removeFromFavorites(propertyId)
-    } else {
-      await addToFavorites(propertyId)
-    }
-    //updates the local state after successful API call
-    favoriteProperties.value[propertyId] = !favoriteProperties.value[propertyId]
-    
-    //emit event to notify other components
-    emit('favoriteToggled', propertyId)
-  } catch (error) {
-    console.error('Error toggling favorite:', error)
-    alert('Failed to update favorite.')
-  }
-}
-
-const addToFavorites = async (propertyId: string) => {
-  if (!user.value) {
-    return alert('Please sign in to manage favorites.');
-  }
-  await axios.post('http://localhost:5000/api/favorites', {
-    clerkUserId: user.value.id,
-    propertyId,
-  });
-}
-
-const removeFromFavorites = async (propertyId: string) => {
-  if (!user.value) {
-    return alert('Please sign in to manage favorites.');
-  }
-  await axios.delete(`http://localhost:5000/api/favorites/${user.value.id}/${propertyId}`);
 }
 
 const filteredProperties = computed(() => {
@@ -144,16 +89,15 @@ onMounted(async () => {
           <p><strong>Posted by:</strong> {{ property.username || 'Unknown user' }}</p>
           <p><small>Posted on: {{ new Date(property.createdAt).toLocaleString() }}</small></p>
         </router-link>
-        <button @click="toggleFavorite(property._id)">
-          {{ favoriteProperties[property._id] ? 'Remove from Favorites' : 'Add to Favorites' }}
-        </button>
+        <FavoritesManager 
+          :propertyId="property._id" 
+          @favoriteToggled="(propertyId: string) => $emit('favoriteToggled', propertyId)"
+        />
         <BookProperty :propertyId="property._id" />
       </li>
     </TransitionGroup>
   </div>
 </template>
-
-
 
 <style scoped>
 .property-list {

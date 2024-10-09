@@ -5,8 +5,8 @@ import axios from 'axios'
 
 const title = ref('')
 const description = ref('')
-const country = ref('')  // New country field
-const city = ref('')     // New city field
+const country = ref('') 
+const city = ref('')     
 const maxGuests = ref(0)
 const pricePerNight = ref(0)
 const rooms = ref(0)
@@ -99,7 +99,7 @@ const resetForm = () => {
     <form v-else @submit.prevent="createProperty">
       <div>
         <label for="title">Title:</label>
-        <input id="title" v-model="title" required />
+        <input id="title" v-model.trim="title" required />
       </div>
       <div>
         <label for="description">Description:</label>
