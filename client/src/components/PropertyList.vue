@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import GuestFilter from '@/components/GuestFilter.vue'
 import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
 import debounce from 'lodash/debounce'
 import BookProperty from './BookProperty.vue'
-import SearchFilter from './SearchFilter.vue'
 import FavoritesManager from './FavoriteManager.vue'
 import { useUser } from 'vue-clerk'
+import { update } from 'lodash'
 
 const emit = defineEmits(['favoriteToggled']) 
 
@@ -14,11 +15,13 @@ const loading = ref(false)
 const showLoading = ref(false)
 const error = ref<string | null>(null)
 const searchQuery = ref('')
+const guestCount = ref(1)
 const { user, isLoaded } = useUser()
 
 const fetchProperties = async () => {
   try {
     loading.value = true
+    showLoading.value = true
     const response = await axios.get<Property[]>('http://localhost:5000/api/properties')
     properties.value = response.data
     error.value = null
@@ -32,24 +35,36 @@ const fetchProperties = async () => {
     properties.value = []
   } finally {
     loading.value = false
+    showLoading.value = false
   }
 }
 
 const filteredProperties = computed(() => {
-  if (!searchQuery.value) return properties.value
-  const query = searchQuery.value.toLowerCase()
-  return properties.value.filter(property =>
-    property.location.country.toLowerCase().includes(query) ||
-    property.location.city.toLowerCase().includes(query)
-  )
+  return properties.value.filter(property => {
+    const matchesSearch = !searchQuery.value || 
+      property.location.country.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      property.location.city.toLowerCase().includes(searchQuery.value.toLowerCase())
+    const matchesGuests = property.maxGuests >= guestCount.value
+    return matchesSearch && matchesGuests
+  })
 })
 
 const debouncedSearch = debounce((query: string) => {
   searchQuery.value = query
 }, 300)
 
-const applySearch = (query: string) => {
-  debouncedSearch(query)
+const applySearch = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  debouncedSearch(target.value)
+}
+
+const updateGuestCount = (count: number) => {
+  guestCount.value = count
+}
+
+const applyGuestFilter = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  guestCount.value = parseInt(target.value) || 1
 }
 
 // Watches for user authentication state
@@ -68,7 +83,17 @@ onMounted(async () => {
 
 <template>
   <div class="property-list">
-    <SearchFilter @search="applySearch" />
+    <div class="filters">
+      <div class="search-filter">
+        <input
+          v-model="searchQuery"
+          @input="applySearch"
+          placeholder="Search for a country or city..."
+          type="text"
+        />
+      </div>
+      <GuestFilter @updateGuestCount="updateGuestCount" />
+    </div>
     <div v-if="showLoading" class="loading-indicator">Loading...</div>
     <div v-if="error">{{ error }}</div>
     <TransitionGroup name="property-list" tag="ul">
@@ -103,6 +128,26 @@ onMounted(async () => {
 .property-list {
   max-width: 800px;
   margin: 0 auto;
+}
+.filters {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.search-filter, .guest-filter {
+  flex: 1;
+  margin-right: 10px;
+}
+.search-filter input, .guest-filter input {
+  width: 100%;
+  padding: 8px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.guest-filter label {
+  display: block;
+  margin-bottom: 5px;
 }
 .property-item {
   border: 1px solid #ddd;
