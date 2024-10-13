@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import { clerkPlugin } from 'vue-clerk'
 import App from './App.vue'
 import router from './router'
+import '@fortawesome/fontawesome-free/css/all.css'
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 

@@ -12,7 +12,8 @@ interface IProperty extends Document {
   rooms: number
   beds: number
   amenities: string[]
-  images: string[]  
+  images: string[]
+  rating: number
 }
 
 const PropertySchema: Schema = new Schema({
@@ -30,7 +31,8 @@ const PropertySchema: Schema = new Schema({
   rooms: { type: Number, required: true },
   beds: { type: Number, required: true},
   amenities: { type: [String], required: true },
-  images: { type: [String], default: [] }  
+  images: { type: [String], default: [] },
+  rating: { type: Number, default: 0 }
 }, { timestamps: true })
 
 export default mongoose.model<IProperty>('Property', PropertySchema)

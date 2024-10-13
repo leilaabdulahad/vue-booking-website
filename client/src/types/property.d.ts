@@ -18,5 +18,6 @@ interface Property {
   amenities: string[]
   images: string[]
   isFavorite?: boolean 
+  rating: number
 }
 
