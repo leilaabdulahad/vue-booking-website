@@ -21,7 +21,7 @@ const router = useRouter()
 
 const checkInDate = ref<string | null>(null)
 const checkOutDate = ref<string | null>(null)
-
+const showGuestDropdown = ref(false)
 
 const fetchProperties = async () => {
   try {
@@ -67,21 +67,22 @@ const updateGuestCount = (count: number) => {
   guestCount.value = count
 }
 
-const applyGuestFilter = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  guestCount.value = parseInt(target.value) || 1
+const toggleGuestDropdown = () => {
+  showGuestDropdown.value = !showGuestDropdown.value
 }
-watch([checkInDate, checkOutDate], ([newCheckIn, newCheckOut]) => {
+
+watch([checkInDate, checkOutDate, searchQuery, guestCount], ([newCheckIn, newCheckOut, newSearch, newGuestCount]) => {
   router.replace({
     query: {
       ...route.query,
       checkIn: newCheckIn,
-      checkOut: newCheckOut
+      checkOut: newCheckOut,
+      search: newSearch,
+      guests: newGuestCount
     }
   })
 })
 
-// Watches for user authentication state
 watch([user, isLoaded], async ([newUser, loaded]) => {
   if (newUser && loaded) {
     await fetchProperties()
@@ -92,33 +93,45 @@ onMounted(async () => {
   await fetchProperties()
   checkInDate.value = route.query.checkIn as string || null
   checkOutDate.value = route.query.checkOut as string || null
+  guestCount.value = Number(route.query.guests) || 1
 })
 </script>
 
 <template>
   <div class="property-list">
-    <div class="filters">
-      <div class="date-filters">
-        <input
-          type="date"
-          v-model="checkInDate"
-          placeholder="Check-in Date"
-        />
-        <input
-          type="date"
-          v-model="checkOutDate"
-          placeholder="Check-out Date"
-        />
+    <div class="filters-container">
+      <div class="filters-wrapper">
+        <div class="filter-item search-filter">
+          <i class="fas fa-search"></i>
+          <input
+            v-model="searchQuery"
+            @input="applySearch"
+            placeholder="Search destinations"
+            type="text"
+          />
+        </div>
+        <div class="filter-item date-filters">
+          <div class="date-input">
+            <label>Check in</label>
+            <input
+              type="date"
+              v-model="checkInDate"
+              placeholder="Add dates"
+            />
+          </div>
+          <div class="date-input">
+            <label>Check out</label>
+            <input
+              type="date"
+              v-model="checkOutDate"
+              placeholder="Add dates"
+            />
+          </div>
+        </div>
+        <div class="filter-item guest-filter">
+          <GuestFilter @updateGuestCount="updateGuestCount" />
+        </div>
       </div>
-      <div class="search-filter">
-        <input
-          v-model="searchQuery"
-          @input="applySearch"
-          placeholder="Search for a country or city..."
-          type="text"
-        />
-      </div>
-      <GuestFilter @updateGuestCount="updateGuestCount" />
     </div>
     <div v-if="showLoading" class="loading-indicator">Loading...</div>
     <div v-if="error">{{ error }}</div>
@@ -162,26 +175,108 @@ onMounted(async () => {
   </div>
 </template>
 
+
 <style scoped>
+.property-item a{
+  text-decoration: none;
+  color: inherit;
+}
+.filters-container {
+  background-color: #ffffff;
+  border-radius: 40px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 20px 30px;
+  margin-bottom: 30px;
+}
+
+.filters-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.filter-item {
+  padding: 10px 15px;
+  border-right: 1px solid #dddddd;
+  cursor: pointer;
+}
+
+.filter-item:last-child {
+  border-right: none;
+}
+
+.search-filter {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+}
+
+.search-filter i {
+  margin-right: 10px;
+  color: #717171;
+}
+
+.search-filter input {
+  border: none;
+  outline: none;
+  font-size: 14px;
+  width: 100%;
+  padding: 8px;
+}
+
+.date-filters {
+  display: flex;
+  gap: 20px;
+}
+
+.date-input input {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  outline: none;
+  padding: 8px;
+}
+
+
+.loading-indicator {
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+  color: #666;
+  font-size: 18px;
+}
+
 .property-list {
   max-width: 800px;
   margin: 0 auto;
 }
+
+.property-item {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 1rem;
+  list-style-type: none;
+}
+
 .property-image-container {
   position: relative;
   width: 100%;
   height: 200px; 
   margin-bottom: 1rem;
   overflow: hidden;
+  border-radius: 10px;
 }
 
-.property-image{
+.property-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 10px;
 }
-.favorite-button-overlay{
+
+.favorite-button-overlay {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -194,55 +289,34 @@ onMounted(async () => {
   align-items: center;
   margin-bottom: 0.5rem;
 }
-.title-rating-price-container h3 {
-  margin: 0;
-  font-size: 1.2rem;
-  flex-grow: 1;
-}
-.rating-container {
-  display: flex;
-  align-items: center;
-}
-.rating {
-  margin-right: 1rem;
-  font-weight: bold;
-}
-.price {
-  font-weight: bold;
-  font-size: 1.1rem;
-}
+
 .property-details {
   font-size: 0.9rem;
   color: #666;
 }
-.filters {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
+
+.price {
+  font-weight: bold;
+  font-size: 1.1rem;
 }
-.date-filters {
-  display: flex;
-  gap: 10px;
-}
-.date-filters input {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-.property-item {
-  border: 1px solid #ddd;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  list-style-type: none;
-}
-.loading-indicator {
-  text-align: center;
-  padding: 20px;
-  font-style: italic;
-  color: #666;
-}
-.property-item a{
-  text-decoration: none;
-  color: inherit;
+
+@media (max-width: 768px) {
+  .filters-wrapper {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .search-filter {
+    width: 100%;
+  }
+
+  .guest-filter {
+    width: 100%;
+  }
+
+  .property-list {
+    max-width: 100%;
+  }
 }
 </style>
+
