@@ -75,9 +75,7 @@ watch([user, isLoaded], async ([newUser, loaded]) => {
 })
 
 onMounted(async () => {
-  if (isLoaded.value && user.value) {
     await fetchProperties()
-  }
 })
 </script>
 
