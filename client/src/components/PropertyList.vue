@@ -3,12 +3,11 @@ import GuestFilter from '@/components/GuestFilter.vue'
 import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
 import debounce from 'lodash/debounce'
-import BookProperty from './BookProperty.vue'
 import FavoritesManager from './FavoriteManager.vue'
 import { useUser } from 'vue-clerk'
-import { update } from 'lodash'
+import { useRoute, useRouter } from 'vue-router'
 
-const emit = defineEmits(['favoriteToggled']) 
+const emit = defineEmits(['favoriteToggled'])
 
 const properties = ref<Property[]>([])
 const loading = ref(false)
@@ -17,6 +16,12 @@ const error = ref<string | null>(null)
 const searchQuery = ref('')
 const guestCount = ref(1)
 const { user, isLoaded } = useUser()
+const route = useRoute()
+const router = useRouter()
+
+const checkInDate = ref<string | null>(null)
+const checkOutDate = ref<string | null>(null)
+
 
 const fetchProperties = async () => {
   try {
@@ -66,6 +71,15 @@ const applyGuestFilter = (event: Event) => {
   const target = event.target as HTMLInputElement
   guestCount.value = parseInt(target.value) || 1
 }
+watch([checkInDate, checkOutDate], ([newCheckIn, newCheckOut]) => {
+  router.replace({
+    query: {
+      ...route.query,
+      checkIn: newCheckIn,
+      checkOut: newCheckOut
+    }
+  })
+})
 
 // Watches for user authentication state
 watch([user, isLoaded], async ([newUser, loaded]) => {
@@ -75,13 +89,27 @@ watch([user, isLoaded], async ([newUser, loaded]) => {
 })
 
 onMounted(async () => {
-    await fetchProperties()
+  await fetchProperties()
+  checkInDate.value = route.query.checkIn as string || null
+  checkOutDate.value = route.query.checkOut as string || null
 })
 </script>
 
 <template>
   <div class="property-list">
     <div class="filters">
+      <div class="date-filters">
+        <input
+          type="date"
+          v-model="checkInDate"
+          placeholder="Check-in Date"
+        />
+        <input
+          type="date"
+          v-model="checkOutDate"
+          placeholder="Check-out Date"
+        />
+      </div>
       <div class="search-filter">
         <input
           v-model="searchQuery"
@@ -110,11 +138,18 @@ onMounted(async () => {
             />
           </div>
         </div>
-        <router-link :to="{ name: 'PropertyDetail', params: { id: property._id } }">
+        <router-link :to="{ 
+          name: 'PropertyDetail', 
+          params: { id: property._id }, 
+          query: { 
+            checkIn: checkInDate, 
+            checkOut: checkOutDate 
+          } 
+        }">
           <div class="title-rating-price-container">
             <h3>{{ property.title }}</h3>
             <div class="rating-container">
-              <span class="rating"><i class="fas fa-star"></i>{{ property.rating }}</span> 
+              <span class="rating"><i class="fas fa-star"></i>{{ property.rating }}</span>
             </div>
           </div>
           <div class="property-details">
@@ -122,7 +157,6 @@ onMounted(async () => {
           </div>
           <span class="price">{{ property.pricePerNight }} kr</span>
         </router-link>
-        <BookProperty :propertyId="property._id" />
       </li>
     </TransitionGroup>
   </div>
@@ -181,36 +215,25 @@ onMounted(async () => {
   font-size: 0.9rem;
   color: #666;
 }
-.property-image-container {
-  position: relative;
-  margin-bottom: 1rem;
-  height: 200px;
-  margin-bottom: 1rem;
-  overflow: hidden;
-}
-
 .filters {
   display: flex;
   justify-content: space-between;
   margin-bottom: 20px;
 }
-
-.search-filter input{
-  width: 100%;
+.date-filters {
+  display: flex;
+  gap: 10px;
+}
+.date-filters input {
   padding: 8px;
-  font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
-
 .property-item {
   border: 1px solid #ddd;
   padding: 1rem;
   margin-bottom: 1rem;
   list-style-type: none;
-}
-h3 {
-  margin-top: 0;
 }
 .loading-indicator {
   text-align: center;
@@ -222,5 +245,4 @@ h3 {
   text-decoration: none;
   color: inherit;
 }
-
 </style>

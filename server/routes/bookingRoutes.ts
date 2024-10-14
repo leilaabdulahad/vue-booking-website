@@ -22,32 +22,37 @@ router.post('/', async (req: express.Request, res: express.Response) => {
         { startDate: { $lt: endDate }, endDate: { $gt: startDate } },
       ],
     })
-
     if (overlappingBooking) {
       return res.status(400).json({ message: 'The property is already booked for the selected dates.' })
     }
 
-    //fecthing username from clerk
-    const clerkUser = await clerkClient.users.getUser(clerkUserId)
-    const username = clerkUser?.username || clerkUser?.firstName + ' ' + clerkUser?.lastName || 'Unknown'
+    //fetching username from Clerk
+    let username = 'Unknown'
+    if (clerkUserId) {
+      try {
+        const clerkUser = await clerkClient.users.getUser(clerkUserId)
+        username = clerkUser?.username || `${clerkUser?.firstName} ${clerkUser?.lastName}`.trim() || 'Unknown'
+      } catch (clerkError) {
+        console.error('Error fetching user from Clerk:', clerkError)      }
+    }
 
     //calculating total price
-    const start = new Date(startDate)
-    const end = new Date(endDate)
+    const start = new Date(startDate);
+    const end = new Date(endDate);
     const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24))
     const totalPrice = nights * property.pricePerNight
 
-    //creating new booking with username
+    //creating new booking
     const newBooking = new Booking({
       propertyId,
       startDate,
       endDate,
       totalPrice,
-      status: 'confirmed', 
-      username, 
-    })
-
+      status: 'confirmed',
+      username,
+    });
     await newBooking.save()
+
     return res.status(201).json(newBooking)
   } catch (error) {
     console.error('Error creating booking:', error)
@@ -55,15 +60,14 @@ router.post('/', async (req: express.Request, res: express.Response) => {
   }
 })
 
-//checking unavailable dates 
+//checking unavailable dates
 router.get('/unavailable/:propertyId', async (req: express.Request, res: express.Response) => {
   try {
     const bookings = await Booking.find({
       propertyId: req.params.propertyId,
       status: { $ne: 'cancelled' },
     }).select('startDate endDate')
-    
-    res.json({ unavailableDates: bookings });
+    res.json({ unavailableDates: bookings })
   } catch (error) {
     res.status(500).json({ message: 'Error fetching unavailable dates', error: error.message })
   }

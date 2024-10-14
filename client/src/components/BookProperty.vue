@@ -1,23 +1,27 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { useUser } from 'vue-clerk'
 
 const props = defineProps<{
   propertyId: string
+  checkIn: string | null
+  checkOut: string | null
 }>()
 
-const startDate = ref('')
-const endDate = ref('')
+const emit = defineEmits(['dateChange'])
+
+const localStartDate = ref(props.checkIn || '')
+const localEndDate = ref(props.checkOut || '')
 const minDate = ref(new Date().toISOString().split('T')[0])
 const unavailableDates = ref([])
 const error = ref('')
 const success = ref('')
 const isLoading = ref(false)
-
 const { user } = useUser()
 
 const fetchUnavailableDates = async () => {
+  isLoading.value = true
   try {
     const response = await axios.get(`http://localhost:5000/api/bookings/unavailable/${props.propertyId}`)
     unavailableDates.value = response.data.unavailableDates.map((booking: any) => ({
@@ -26,6 +30,8 @@ const fetchUnavailableDates = async () => {
     }))
   } catch (err) {
     console.error('Error fetching unavailable dates:', err)
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -33,29 +39,40 @@ onMounted(() => {
   fetchUnavailableDates()
 })
 
+const isDateUnavailable = (date: Date) => {
+  return unavailableDates.value.some((booking: any) => {
+    const start = booking.startDate
+    const end = booking.endDate
+    return date >= start && date <= end
+  })
+}
+
 const bookProperty = async () => {
   isLoading.value = true
   error.value = ''
   success.value = ''
-
-  //making sure user is defined before accessing user.id
   if (!user.value) {
     error.value = 'User not authenticated.'
     isLoading.value = false
     return
   }
-
+  if (isDateUnavailable(new Date(localStartDate.value)) || isDateUnavailable(new Date(localEndDate.value))) {
+    error.value = 'Selected dates are unavailable.'
+    isLoading.value = false
+    return
+  }
   try {
     const response = await axios.post('http://localhost:5000/api/bookings', {
       propertyId: props.propertyId,
-      startDate: startDate.value,
-      endDate: endDate.value,
+      startDate: localStartDate.value,
+      endDate: localEndDate.value,
       clerkUserId: user.value.id,
     })
     success.value = 'Booking successful!'
-    startDate.value = ''
-    endDate.value = ''
+    localStartDate.value = ''
+    localEndDate.value = ''
     fetchUnavailableDates()
+    emit('dateChange', '', '') // Reset dates in parent component
   } catch (err) {
     if (axios.isAxiosError(err) && err.response) {
       error.value = `Error booking property: ${err.response.data.message || err.message}`
@@ -67,6 +84,22 @@ const bookProperty = async () => {
     isLoading.value = false
   }
 }
+
+watch([localStartDate, localEndDate], ([newStartDate, newEndDate]) => {
+  emit('dateChange', newStartDate, newEndDate)
+})
+
+watch(() => props.checkIn, (newCheckIn) => {
+  if (newCheckIn !== localStartDate.value) {
+    localStartDate.value = newCheckIn || ''
+  }
+})
+
+watch(() => props.checkOut, (newCheckOut) => {
+  if (newCheckOut !== localEndDate.value) {
+    localEndDate.value = newCheckOut || ''
+  }
+})
 </script>
 
 <template>
@@ -75,25 +108,27 @@ const bookProperty = async () => {
     <form @submit.prevent="bookProperty">
       <div>
         <label for="startDate">Check-in:</label>
-        <input 
-          type="date" 
-          id="startDate" 
-          v-model="startDate" 
-          :min="minDate" 
-          required 
+        <input
+          type="date"
+          id="startDate"
+          v-model="localStartDate"
+          :min="minDate"
+          required
         />
       </div>
       <div>
         <label for="endDate">Check-out:</label>
-        <input 
-          type="date" 
-          id="endDate" 
-          v-model="endDate" 
-          :min="startDate" 
-          required 
+        <input
+          type="date"
+          id="endDate"
+          v-model="localEndDate"
+          :min="localStartDate"
+          required
         />
       </div>
-      <button type="submit" :disabled="isLoading">{{ isLoading ? 'Booking...' : 'Book Now' }}</button>
+      <button type="submit" :disabled="isLoading || isDateUnavailable(new Date(localStartDate)) || isDateUnavailable(new Date(localEndDate))">
+        {{ isLoading ? 'Booking...' : 'Book Now' }}
+      </button>
     </form>
     <p v-if="error" class="error">{{ error }}</p>
     <p v-if="success" class="success">{{ success }}</p>
