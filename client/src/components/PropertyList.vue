@@ -98,7 +98,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="property-list">
+  <div class="property-list-page">
     <div class="filters-container">
       <div class="filters-wrapper">
         <div class="filter-item search-filter">
@@ -106,7 +106,7 @@ onMounted(async () => {
           <input
             v-model="searchQuery"
             @input="applySearch"
-            placeholder="Search destinations"
+            placeholder="Sök destination"
             type="text"
           />
         </div>
@@ -133,12 +133,14 @@ onMounted(async () => {
         </div>
       </div>
     </div>
-    <div v-if="showLoading" class="loading-indicator">Loading...</div>
+
+  <h1 class="property-title">Populära destinationer</h1>
+    <div v-if="showLoading" class="loading-indicator">Laddar...</div>
     <div v-if="error">{{ error }}</div>
-    <TransitionGroup name="property-list" tag="ul">
+    <TransitionGroup name="property-list" tag="ul" class="property-list">
       <li v-for="property in filteredProperties" :key="property._id" class="property-item">
         <div class="property-image-container">
-          <img
+          <img 
             v-if="property.images && property.images.length > 0"
             :src="property.images[0]"
             :alt="property.title"
@@ -148,16 +150,16 @@ onMounted(async () => {
             <FavoritesManager
               :propertyId="property._id"
               @favoriteToggled="(propertyId: string) => $emit('favoriteToggled', propertyId)"
-            />
+              />
           </div>
         </div>
-        <router-link :to="{ 
-          name: 'PropertyDetail', 
-          params: { id: property._id }, 
-          query: { 
-            checkIn: checkInDate, 
-            checkOut: checkOutDate 
-          } 
+        <router-link :to="{
+          name: 'PropertyDetail',
+          params: { id: property._id },
+          query: {
+            checkIn: checkInDate,
+            checkOut: checkOutDate
+          }
         }">
           <div class="title-rating-price-container">
             <h3>{{ property.title }}</h3>
@@ -167,58 +169,53 @@ onMounted(async () => {
           </div>
           <div class="property-details">
             <p>{{ property.rooms }} rum · {{ property.beds }} sängar</p>
-          </div>
-          <span class="price">{{ property.pricePerNight }} kr</span>
-        </router-link>
+          </div> 
+          <span class="price">{{ property.pricePerNight }} kr</span> 
+      </router-link>
       </li>
     </TransitionGroup>
   </div>
 </template>
 
 
+
 <style scoped>
-.property-item a{
-  text-decoration: none;
-  color: inherit;
+.property-title {
+  text-align: center;
+}
+.property-list-page {
+  max-width: 1200px;
+  margin: 0 auto;
 }
 .filters-container {
-  background-color: #ffffff;
-  border-radius: 40px;
+  border-radius: 100px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
-  padding: 20px 30px;
+  padding: 15px 20px;
   margin-bottom: 30px;
-}
-
-.filters-wrapper {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: 20px;
 }
-
-.filter-item {
-  padding: 10px 15px;
-  border-right: 1px solid #dddddd;
-  cursor: pointer;
+.filters-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 20px;
 }
-
-.filter-item:last-child {
-  border-right: none;
+.filter-item{
+  flex: 1;
 }
 
 .search-filter {
-  flex-grow: 1;
   display: flex;
   align-items: center;
   padding: 10px;
-  border-radius: 12px;
-  border: 1px solid #ddd;
 }
 
 .search-filter i {
-  margin-right: 10px;
-  color: #717171;
+  margin-right: 10px;  
 }
-
 .search-filter input {
   border: none;
   outline: none;
@@ -226,61 +223,61 @@ onMounted(async () => {
   width: 100%;
   padding: 8px;
 }
-
 .date-filters {
   display: flex;
-  gap: 20px;
+  gap: 10px;
+  flex-grow: 1;
 }
-
 .date-input input {
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border: 1px solid;
   outline: none;
-  padding: 8px;
+  width: 100%;
 }
-
-
-.loading-indicator {
-  text-align: center;
-  padding: 20px;
-  font-style: italic;
-  color: #666;
-  font-size: 18px;
+.guest-filter {
+  flex-grow: 1;
 }
 
 .property-list {
-  max-width: 800px;
-  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+}
+.property-item a, 
+.property-item a:hover, 
+.property-item a:focus {
+  text-decoration: none;
+  color: inherit; 
 }
 
 .property-item {
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 20px;
+  border: none;
+  border-radius: 12px;
+  padding: 10px;
   margin-bottom: 1rem;
   list-style-type: none;
+  /* box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.1); */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.property-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 .property-image-container {
   position: relative;
   width: 100%;
-  height: 200px; 
+  height: 250px;
   margin-bottom: 1rem;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .property-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.favorite-button-overlay {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 10;
+  transition: transform 0.3s ease;
 }
 
 .title-rating-price-container {
@@ -290,33 +287,43 @@ onMounted(async () => {
   margin-bottom: 0.5rem;
 }
 
-.property-details {
+.rating-container {
+  display: flex;
+  align-items: center;
   font-size: 0.9rem;
-  color: #666;
+}
+
+.rating i {
+  margin-right: 5px;
 }
 
 .price {
   font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  color: #222;
+}
+
+.property-details {
+  font-size: 0.85rem;
+  color: #717171;
+}
+
+@media (max-width: 1024px) {
+  .property-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
+  .property-list {
+    grid-template-columns: 1fr;
+  }
+
   .filters-wrapper {
     flex-direction: column;
-    gap: 15px;
-  }
-
-  .search-filter {
-    width: 100%;
-  }
-
-  .guest-filter {
-    width: 100%;
-  }
-
-  .property-list {
-    max-width: 100%;
+    gap: 10px;
   }
 }
+
 </style>
 
