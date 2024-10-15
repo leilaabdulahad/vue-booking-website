@@ -23,12 +23,20 @@ const checkInDate = ref<string | null>(null)
 const checkOutDate = ref<string | null>(null)
 const showGuestDropdown = ref(false)
 
+//refs for image carousel
+const currentImageIndexes = ref<{ [key: string]: number }>({})
+const imageLoadErrors = ref<{ [key: string]: boolean }>({})
+
 const fetchProperties = async () => {
   try {
     loading.value = true
     showLoading.value = true
     const response = await axios.get<Property[]>('http://localhost:5000/api/properties')
     properties.value = response.data
+    properties.value.forEach(property => {
+      currentImageIndexes.value[property._id] = 0
+      imageLoadErrors.value[property._id] = false
+    })
     error.value = null
   } catch (err) {
     console.error('Error fetching properties:', err)
@@ -69,6 +77,32 @@ const updateGuestCount = (count: number) => {
 
 const toggleGuestDropdown = () => {
   showGuestDropdown.value = !showGuestDropdown.value
+}
+
+//methods for image carousel
+const nextImage = (propertyId: string) => {
+  const property = properties.value.find(p => p._id === propertyId)
+  if (property && property.images) {
+    currentImageIndexes.value[propertyId] = (currentImageIndexes.value[propertyId] + 1) % property.images.length
+  }
+}
+
+const prevImage = (propertyId: string) => {
+  const property = properties.value.find(p => p._id === propertyId)
+  if (property && property.images) {
+    currentImageIndexes.value[propertyId] = (currentImageIndexes.value[propertyId] - 1 + property.images.length) % property.images.length
+  }
+}
+
+const handleImageError = (propertyId: string) => {
+  imageLoadErrors.value[propertyId] = true
+}
+
+const getCurrentImage = (property: Property): string => {
+  if (!property.images || property.images.length === 0 || imageLoadErrors.value[property._id]) {
+    return '/path/to/placeholder-image.jpg' // Replace with your actual placeholder image path
+  }
+  return property.images[currentImageIndexes.value[property._id]]
 }
 
 watch([checkInDate, checkOutDate, searchQuery, guestCount], ([newCheckIn, newCheckOut, newSearch, newGuestCount]) => {
@@ -140,13 +174,30 @@ onMounted(async () => {
     <TransitionGroup name="property-list" tag="ul" class="property-list">
       <li v-for="property in filteredProperties" :key="property._id" class="property-item">
         <div class="property-image-container">
-          <img 
-            v-if="property.images && property.images.length > 0"
-            :src="property.images[0]"
-            :alt="property.title"
-            class="property-image"
-          />
-          <!-- Favorite Button Overlay -->
+          <transition name="fade" mode="out-in">
+            <img 
+              :key="currentImageIndexes[property._id]"
+              :src="getCurrentImage(property)"
+              :alt="property.title"
+              @error="handleImageError(property._id)"
+              class="property-image"
+            />
+          </transition>
+
+          <button 
+            v-if="property.images && property.images.length > 1" 
+            @click="prevImage(property._id)" 
+            class="carousel-button prev"
+          >
+            &lt;
+          </button>
+          <button 
+            v-if="property.images && property.images.length > 1" 
+            @click="nextImage(property._id)" 
+            class="carousel-button next"
+          >
+            &gt;
+          </button>
           <div class="favorite-button-overlay">
             <FavoritesManager
               :propertyId="property._id"
@@ -251,12 +302,39 @@ onMounted(async () => {
   transition: transform 0.3s ease;
 }
 
+.carousel-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: transparent;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.carousel-button:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.carousel-button.prev {
+  left: 10px;
+}
+
+.carousel-button.next {
+  right: 10px;
+}
+
 .favorite-button-overlay {
   position: absolute;
   top: 10px;
   right: 10px;
   z-index: 10;
-  /* background-color: rgba(255, 255, 255, 0.8); */
   padding: 8px;
   border-radius: 50%;
   display: flex;
@@ -289,6 +367,15 @@ onMounted(async () => {
   margin-right: 4px;
 }
 
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
 
 @media (max-width: 1024px) {
   .property-list {
