@@ -3,25 +3,23 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { useUser } from 'vue-clerk'
-import BookProperty from './BookProperty.vue' 
+import BookProperty from './BookProperty.vue'
+import FavoriteManager from '@/components/FavoriteManager.vue'
 
+const route = useRoute()
+const router = useRouter()
 const { user, isLoaded } = useUser()
 
 const property = ref<Property | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
-const isFavorite = ref(false)
-const favoriteLoading = ref(false)
-const favoriteError = ref<string | null>(null)  
+const checkInDate = ref<string | null>(route.query.checkIn as string || null)
+const checkOutDate = ref<string | null>(route.query.checkOut as string || null)
+const currentImageIndex = ref(0)
 
-
-const route = useRoute()
-const router = useRouter()
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 const propertyId = computed(() => route.params.id as string)
-const checkInDate = ref<string | null>(route.query.checkIn as string || null)
-const checkOutDate = ref<string | null>(route.query.checkOut as string || null)
 
 const fetchProperty = async () => {
   try {
@@ -39,53 +37,7 @@ const fetchProperty = async () => {
   }
 }
 
-const fetchFavoriteStatus = async () => {
-  if (!user.value) return
-  favoriteLoading.value = true
-  favoriteError.value = null
-  try {
-    const response = await axios.get(`${API_BASE_URL}/api/favorites/${user.value.id}`)
-    isFavorite.value = response.data.some((fav: { propertyId: string }) => fav.propertyId === propertyId.value)
-  } catch (err) {
-    console.error('Error fetching favorite status:', err)
-    if (axios.isAxiosError(err)) {
-      favoriteError.value = `Failed to fetch favorite status: ${err.response?.data?.message || err.message}`
-    } else {
-      favoriteError.value = 'An unexpected error occurred'
-    }
-  } finally {
-    favoriteLoading.value = false
-  }
-}
-
-const toggleFavorite = async () => {
-  if (!user.value) {
-    alert('Please sign in to manage favorites.')
-    return
-  }
-  favoriteLoading.value = true
-  favoriteError.value = null
-  try {
-    if (isFavorite.value) {
-      await axios.delete(`${API_BASE_URL}/api/favorites/${user.value.id}/${propertyId.value}`)
-    } else {
-      await axios.post(`${API_BASE_URL}/api/favorites`, {
-        clerkUserId: user.value.id,
-        propertyId: propertyId.value,
-      })
-    }
-    isFavorite.value = !isFavorite.value
-  } catch (err) {
-    console.error('Error toggling favorite:', err)
-    if (axios.isAxiosError(err)) {
-      favoriteError.value = `Failed to update favorite: ${err.response?.data?.message || err.message}`
-    } else {
-      favoriteError.value = 'An unexpected error occurred while updating favorite'
-    }
-  } finally {
-    favoriteLoading.value = false
-  }
-}
+//updating dates when booked
 const updateDates = (newCheckIn: string, newCheckOut: string) => {
   checkInDate.value = newCheckIn
   checkOutDate.value = newCheckOut
@@ -98,6 +50,19 @@ const updateDates = (newCheckIn: string, newCheckOut: string) => {
   })
 }
 
+// Methods for image carousel
+const nextImage = () => {
+  if (property.value && property.value.images) {
+    currentImageIndex.value = (currentImageIndex.value + 1) % property.value.images.length
+  }
+}
+
+const prevImage = () => {
+  if (property.value && property.value.images) {
+    currentImageIndex.value = (currentImageIndex.value - 1 + property.value.images.length) % property.value.images.length
+  }
+}
+
 watch(
   () => route.query,
   (query) => {
@@ -108,61 +73,109 @@ watch(
 
 onMounted(async () => {
   await fetchProperty()
-  if (isLoaded.value && user.value) {
-    await fetchFavoriteStatus()
-  }
 })
+
 </script>
 
 <template>
-  <div v-if="loading">Loading...</div>
-  <div v-else-if="error">{{ error }}</div>
-  <div v-else-if="property">
-    <h2>{{ property.title }}</h2>
-    <div class="image-gallery" v-if="property.images && property.images.length > 0">
-      <img v-for="(image, index) in property.images" :key="index" :src="image" :alt="`Property image ${index + 1}`" />
+  <div class="detail-container">
+    <div v-if="loading">Loading...</div>
+    <div v-else-if="error">{{ error }}</div>
+    <div v-else-if="property">
+      <h2>{{ property.title }}</h2>
+      <div class="image-carousel" v-if="property.images && property.images.length > 0">
+        <button class="carousel-arrow left" @click="prevImage">&lt;</button>
+        <img :src="property.images[currentImageIndex]" :alt="`Property image ${currentImageIndex + 1}`" />
+        <button class="carousel-arrow right" @click="nextImage">&gt;</button>
+        <div class="carousel-indicator">
+          {{ currentImageIndex + 1 }} / {{ property.images.length }}
+        </div>
+      </div>
+      <div class="property-details">
+        <p><strong>Din värd är:</strong> {{ property.username || 'Unknown user' }}</p>
+        <p>{{ property.rooms }} rum · {{ property.beds }} sängar</p>
+      </div>
+      <p>{{ property.description }}</p>
+      <p> {{ property.pricePerNight }} kr</p>
+      <p><strong>Bekvämligheter:</strong> {{ property.amenities.join(' ') }}</p>
+      
+      <FavoriteManager 
+        :propertyId="property._id" 
+        @favoriteToggled="fetchProperty"  
+      />
+      
+      <BookProperty 
+        :propertyId="property._id" 
+        :checkIn="checkInDate" 
+        :checkOut="checkOutDate"
+        @dateChange="updateDates"
+      />
     </div>
-    <p>{{ property.description }}</p>
-    <p><strong>City:</strong> {{ property.location.city }}</p>
-    <p><strong>Country:</strong> {{ property.location.country }}</p>
-    <p><strong>Max Guests:</strong> {{ property.maxGuests }}</p>
-    <p><strong>Price Per Night:</strong> ${{ property.pricePerNight }}</p>
-    <p><strong>Rooms:</strong> {{ property.rooms }}</p>
-    <p><strong>Beds:</strong> {{ property.beds }}</p>
-    <p><strong>Amenities:</strong> {{ property.amenities.join(', ') }}</p>
-    <p><strong>Posted by:</strong> {{ property.username || 'Unknown user' }}</p>
-    <p><small>Posted on: {{ new Date(property.createdAt).toLocaleString() }}</small></p>
-
-    <div v-if="isLoaded && user">
-      <button @click="toggleFavorite" :disabled="favoriteLoading">
-        {{ isFavorite ? 'Remove from Favorites' : 'Add to Favorites' }}
-      </button>
-      <p v-if="favoriteError" class="error">{{ favoriteError }}</p>
-    </div>
-    <p v-else>Sign in to manage favorites</p>
-
-    <BookProperty 
-      :propertyId="property._id" 
-      :checkIn="checkInDate" 
-      :checkOut="checkOutDate"
-      @dateChange="updateDates"
-    />
   </div>
 </template>
 
 <style scoped>
-.image-gallery {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 1rem;
+.detail-container {
+  margin: 100px;
 }
-.image-gallery img {
-  width: 150px;
-  height: 150px;
+
+.image-carousel {
+  position: relative;
+  width: 100%;
+  max-width: 914px;
+  margin: 0 auto 1rem;
+  aspect-ratio: 914 / 334;
+  overflow: hidden;
+}
+
+.image-carousel img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
+
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: transparent;
+  border: none;
+  font-size: 24px;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.carousel-arrow:hover {
+  cursor: pointer;
+}
+
+.carousel-arrow.left {
+  left: 10px;
+}
+
+.carousel-arrow.right {
+  right: 10px;
+}
+
+.carousel-indicator {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 15px;
+}
+
 .error {
   color: red;
+}
+
+@media (max-width: 914px) {
+  .image-carousel {
+    width: 100%;
+    aspect-ratio: 914 / 334;
+  }
 }
 </style>
