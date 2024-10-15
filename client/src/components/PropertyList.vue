@@ -6,6 +6,9 @@ import debounce from 'lodash/debounce'
 import FavoritesManager from './FavoriteManager.vue'
 import { useUser } from 'vue-clerk'
 import { useRoute, useRouter } from 'vue-router'
+import Datepicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
+
 
 const emit = defineEmits(['favoriteToggled'])
 
@@ -22,6 +25,11 @@ const router = useRouter()
 const checkInDate = ref<string | null>(null)
 const checkOutDate = ref<string | null>(null)
 const showGuestDropdown = ref(false)
+const showDateDropdown = ref(false) 
+
+const toggleDateDropdown = () => {
+  showDateDropdown.value = !showDateDropdown.value
+}
 
 //refs for image carousel
 const currentImageIndexes = ref<{ [key: string]: number }>({})
@@ -148,19 +156,11 @@ onMounted(async () => {
         <div class="filter-item date-filters">
           <div class="date-input">
             <label>Check in</label>
-            <input
-              type="date"
-              v-model="checkInDate"
-              placeholder="Add dates"
-            />
+            <Datepicker v-model="checkInDate" placeholder="Select check-in date" />
           </div>
           <div class="date-input">
             <label>Check out</label>
-            <input
-              type="date"
-              v-model="checkOutDate"
-              placeholder="Add dates"
-            />
+            <Datepicker v-model="checkOutDate" placeholder="Select check-out date" />
           </div>
         </div>
         <div class="filter-item guest-filter">

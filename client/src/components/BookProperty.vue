@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
-import { useUser } from 'vue-clerk'
+import { useUser  } from 'vue-clerk'
+import Datepicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
 
 const props = defineProps<{
   propertyId: string
@@ -72,7 +74,7 @@ const bookProperty = async () => {
     localStartDate.value = ''
     localEndDate.value = ''
     fetchUnavailableDates()
-    emit('dateChange', '', '') // Reset dates in parent component
+    emit('dateChange', '', '') 
   } catch (err) {
     if (axios.isAxiosError(err) && err.response) {
       error.value = `Error booking property: ${err.response.data.message || err.message}`
@@ -108,23 +110,11 @@ watch(() => props.checkOut, (newCheckOut) => {
     <form @submit.prevent="bookProperty">
       <div>
         <label for="startDate">Check-in:</label>
-        <input
-          type="date"
-          id="startDate"
-          v-model="localStartDate"
-          :min="minDate"
-          required
-        />
+        <Datepicker v-model="localStartDate" :min-date="minDate" required />
       </div>
       <div>
         <label for="endDate">Check-out:</label>
-        <input
-          type="date"
-          id="endDate"
-          v-model="localEndDate"
-          :min="localStartDate"
-          required
-        />
+        <Datepicker v-model="localEndDate" :min-date="localStartDate" required />
       </div>
       <button type="submit" :disabled="isLoading || isDateUnavailable(new Date(localStartDate)) || isDateUnavailable(new Date(localEndDate))">
         {{ isLoading ? 'Booking...' : 'Book Now' }}
