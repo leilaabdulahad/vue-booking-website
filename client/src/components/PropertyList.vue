@@ -6,8 +6,8 @@ import debounce from 'lodash/debounce'
 import FavoritesManager from './FavoriteManager.vue'
 import { useUser } from 'vue-clerk'
 import { useRoute, useRouter } from 'vue-router'
-import Datepicker from '@vuepic/vue-datepicker';
-import '@vuepic/vue-datepicker/dist/main.css';
+import Datepicker from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
 
 
 const emit = defineEmits(['favoriteToggled'])
@@ -108,7 +108,7 @@ const handleImageError = (propertyId: string) => {
 
 const getCurrentImage = (property: Property): string => {
   if (!property.images || property.images.length === 0 || imageLoadErrors.value[property._id]) {
-    return '/path/to/placeholder-image.jpg' // Replace with your actual placeholder image path
+    return '/path/to/placeholder-image.jpg' 
   }
   return property.images[currentImageIndexes.value[property._id]]
 }
@@ -365,16 +365,6 @@ onMounted(async () => {
 
 .rating i {
   margin-right: 4px;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
 }
 
 @media (max-width: 1024px) {

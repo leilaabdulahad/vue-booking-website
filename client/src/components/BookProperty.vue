@@ -2,8 +2,8 @@
 import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { useUser  } from 'vue-clerk'
-import Datepicker from '@vuepic/vue-datepicker';
-import '@vuepic/vue-datepicker/dist/main.css';
+import Datepicker from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
 
 const props = defineProps<{
   propertyId: string

@@ -50,7 +50,7 @@ const updateDates = (newCheckIn: string, newCheckOut: string) => {
   })
 }
 
-// Methods for image carousel
+//methods for image carousel
 const nextImage = () => {
   if (property.value && property.value.images) {
     currentImageIndex.value = (currentImageIndex.value + 1) % property.value.images.length
@@ -177,10 +177,6 @@ onMounted(async () => {
   top: 10px;
   right: 10px; 
   z-index: 10; 
-}
-
-.error {
-  color: red;
 }
 
 @media (max-width: 914px) {
