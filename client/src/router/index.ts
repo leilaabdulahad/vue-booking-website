@@ -5,6 +5,7 @@ import CreatePropertyView from '@/views/CreatePropertyView.vue'
 import PropertiesViews from '@/views/PropertiesViews.vue'
 import PropertyDetail from '@/components/PropertyDetail.vue'
 import FavoritesView from '@/views/FavoritesView.vue'
+import MyBookings from '@/views/MyBookings.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -12,17 +13,17 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView,
+      component: HomeView
     },
     {
       path: '/properties',
       name: 'properties',
-      component: PropertiesViews,
+      component: PropertiesViews
     },
     {
       path: '/create-property',
       name: 'create-property',
-      component: CreatePropertyView,
+      component: CreatePropertyView
     },
     {
       path: '/property/:id',
@@ -33,7 +34,12 @@ const router = createRouter({
     {
       path: '/favorites',
       name: 'favorites',
-      component: FavoritesView,
+      component: FavoritesView
+    },
+    {
+      path: '/my-bookings',
+      name: 'my-bookings',
+      component: MyBookings
     },
     {
       path: '/sign-in',
