@@ -134,7 +134,7 @@ onMounted(async () => {
       </div>
     </div>
 
-  <h1 class="property-title">Populära destinationer</h1>
+    <h1 class="property-title">Populära destinationer</h1>
     <div v-if="showLoading" class="loading-indicator">Laddar...</div>
     <div v-if="error">{{ error }}</div>
     <TransitionGroup name="property-list" tag="ul" class="property-list">
@@ -177,16 +177,16 @@ onMounted(async () => {
   </div>
 </template>
 
-
-
 <style scoped>
 .property-title {
   text-align: center;
 }
+
 .property-list-page {
   max-width: 1200px;
   margin: 0 auto;
 }
+
 .filters-container {
   border-radius: 100px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -197,44 +197,16 @@ onMounted(async () => {
   align-items: center;
   gap: 20px;
 }
+
 .filters-wrapper {
   display: flex;
   align-items: center;
   width: 100%;
   gap: 20px;
 }
-.filter-item{
+
+.filter-item {
   flex: 1;
-}
-
-.search-filter {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-}
-
-.search-filter i {
-  margin-right: 10px;  
-}
-.search-filter input {
-  border: none;
-  outline: none;
-  font-size: 14px;
-  width: 100%;
-  padding: 8px;
-}
-.date-filters {
-  display: flex;
-  gap: 10px;
-  flex-grow: 1;
-}
-.date-input input {
-  border: 1px solid;
-  outline: none;
-  width: 100%;
-}
-.guest-filter {
-  flex-grow: 1;
 }
 
 .property-list {
@@ -242,21 +214,13 @@ onMounted(async () => {
   grid-template-columns: repeat(3, 1fr);
   gap: 30px;
 }
-.property-item a, 
-.property-item a:hover, 
-.property-item a:focus {
-  text-decoration: none;
-  color: inherit; 
-}
 
 .property-item {
-  border: none;
+  position: relative;
+  list-style-type: none;
   border-radius: 12px;
   padding: 10px;
-  margin-bottom: 1rem;
-  list-style-type: none;
-  /* box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.1); */
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease;
 }
 
 .property-item:hover {
@@ -280,32 +244,21 @@ onMounted(async () => {
   transition: transform 0.3s ease;
 }
 
-.title-rating-price-container {
+.favorite-button-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  padding: 8px;
+  border-radius: 50%;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+  justify-content: center;
 }
 
-.rating-container {
-  display: flex;
-  align-items: center;
-  font-size: 0.9rem;
-}
-
-.rating i {
-  margin-right: 5px;
-}
-
-.price {
-  font-weight: bold;
-  font-size: 1.2rem;
-  color: #222;
-}
-
-.property-details {
-  font-size: 0.85rem;
-  color: #717171;
+.property-item a {
+  text-decoration: none;
+  color: inherit;
 }
 
 @media (max-width: 1024px) {
@@ -326,4 +279,3 @@ onMounted(async () => {
 }
 
 </style>
-
