@@ -108,6 +108,7 @@ onMounted(async () => {
             @input="applySearch"
             placeholder="Sök destination"
             type="text"
+            class="property-input"
           />
         </div>
         <div class="filter-item date-filters">
@@ -133,7 +134,6 @@ onMounted(async () => {
         </div>
       </div>
     </div>
-
     <h1 class="property-title">Populära destinationer</h1>
     <div v-if="showLoading" class="loading-indicator">Laddar...</div>
     <div v-if="error">{{ error }}</div>
@@ -146,11 +146,12 @@ onMounted(async () => {
             :alt="property.title"
             class="property-image"
           />
+          <!-- Favorite Button Overlay -->
           <div class="favorite-button-overlay">
             <FavoritesManager
               :propertyId="property._id"
               @favoriteToggled="(propertyId: string) => $emit('favoriteToggled', propertyId)"
-              />
+            />
           </div>
         </div>
         <router-link :to="{
@@ -161,17 +162,18 @@ onMounted(async () => {
             checkOut: checkOutDate
           }
         }">
-          <div class="title-rating-price-container">
+          <div class="title-rating-container">
             <h3>{{ property.title }}</h3>
-            <div class="rating-container">
-              <span class="rating"><i class="fas fa-star"></i>{{ property.rating }}</span>
+            <div class="rating">
+              <i class="fas fa-star"></i>
+              {{ property.rating }}
             </div>
           </div>
           <div class="property-details">
             <p>{{ property.rooms }} rum · {{ property.beds }} sängar</p>
           </div> 
           <span class="price">{{ property.pricePerNight }} kr</span> 
-      </router-link>
+        </router-link>
       </li>
     </TransitionGroup>
   </div>
@@ -207,6 +209,11 @@ onMounted(async () => {
 
 .filter-item {
   flex: 1;
+}
+
+.property-input{
+  border: none;
+  margin-left: 5px;
 }
 
 .property-list {
@@ -249,6 +256,7 @@ onMounted(async () => {
   top: 10px;
   right: 10px;
   z-index: 10;
+  /* background-color: rgba(255, 255, 255, 0.8); */
   padding: 8px;
   border-radius: 50%;
   display: flex;
@@ -260,6 +268,27 @@ onMounted(async () => {
   text-decoration: none;
   color: inherit;
 }
+
+.title-rating-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.title-rating-container h3 {
+  margin: 0;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+}
+
+.rating i {
+  margin-right: 4px;
+}
+
 
 @media (max-width: 1024px) {
   .property-list {
@@ -277,5 +306,4 @@ onMounted(async () => {
     gap: 10px;
   }
 }
-
 </style>
