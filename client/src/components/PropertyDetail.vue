@@ -90,6 +90,14 @@ onMounted(async () => {
         <div class="carousel-indicator">
           {{ currentImageIndex + 1 }} / {{ property.images.length }}
         </div>
+        
+        <div class="favorite-manager-overlay">
+          <FavoriteManager 
+            :propertyId="property._id" 
+            @favoriteToggled="fetchProperty"  
+          />
+        </div>
+
       </div>
       <div class="property-details">
         <p><strong>Din värd är:</strong> {{ property.username || 'Unknown user' }}</p>
@@ -98,11 +106,6 @@ onMounted(async () => {
       <p>{{ property.description }}</p>
       <p> {{ property.pricePerNight }} kr</p>
       <p><strong>Bekvämligheter:</strong> {{ property.amenities.join(' ') }}</p>
-      
-      <FavoriteManager 
-        :propertyId="property._id" 
-        @favoriteToggled="fetchProperty"  
-      />
       
       <BookProperty 
         :propertyId="property._id" 
@@ -113,6 +116,7 @@ onMounted(async () => {
     </div>
   </div>
 </template>
+
 
 <style scoped>
 .detail-container {
@@ -166,6 +170,13 @@ onMounted(async () => {
   color: white;
   padding: 5px 10px;
   border-radius: 15px;
+}
+
+.favorite-manager-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px; 
+  z-index: 10; 
 }
 
 .error {
