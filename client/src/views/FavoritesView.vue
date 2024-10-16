@@ -65,14 +65,12 @@ onMounted(() => {
     <TransitionGroup name="favorite-list" tag="ul" class="favorite-list">
       <li v-for="(property, index) in favorites" :key="index" class="favorite-item">
         <div class="favorite-image-container">
-          <router-link :to="{ name: 'PropertyDetail', params: { id: property._id } }">
             <img 
               v-if="property.images && property.images.length > 0"
               :src="property.images[0]"
               :alt="`Property image for ${property.title}`"
               class="favorite-image"
             />
-          </router-link>
           <div class="favorite-manager-wrapper">
             <FavoriteManager 
               :propertyId="property._id"
@@ -81,6 +79,7 @@ onMounted(() => {
           </div>
         </div>
 
+          <router-link :to="{ name: 'PropertyDetail', params: { id: property._id } }">
         <div class="title-rating-price-container">
           <div class="title-rating-row">
             <h3>{{ property.title }}</h3>
@@ -91,6 +90,7 @@ onMounted(() => {
           </div>
           <p>{{ property.pricePerNight }} kr</p>
         </div>
+          </router-link>
       </li>
     </TransitionGroup>
   </div>
@@ -108,12 +108,11 @@ onMounted(() => {
   font-size: 2rem;
   margin-bottom: 1.5rem;
 }
-
 .favorite-list {
   display: grid;
+  list-style-type: none;
   grid-template-columns: repeat(3, 1fr);
   gap: 30px;
-  list-style-type: none;
   padding: 0;
 }
 
@@ -176,6 +175,10 @@ onMounted(() => {
 .no-favorites {
   display: flex;
   justify-content: center;
+}
+a{
+  text-decoration: none;
+  color: black;
 }
 
 @media (max-width: 1024px) {
