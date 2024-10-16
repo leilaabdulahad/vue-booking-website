@@ -1,113 +1,46 @@
 <script setup lang="ts">
-import GuestFilter from '@/components/GuestFilter.vue'
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import axios from 'axios'
 import debounce from 'lodash/debounce'
-import FavoritesManager from './FavoriteManager.vue'
-import { useUser } from 'vue-clerk'
 import { useRoute, useRouter } from 'vue-router'
-import Datepicker from '@vuepic/vue-datepicker'
-import '@vuepic/vue-datepicker/dist/main.css'
+import FilterControls from './FiltersControl.vue'
+import FavoritesManager from './FavoriteManager.vue'
 
-const emit = defineEmits(['favoriteToggled'])
-
-const properties = ref<Property[]>([])
+//state
 const loading = ref(false)
-const showLoading = ref(false)
 const error = ref<string | null>(null)
+const properties = ref<Property[]>([])
 const searchQuery = ref('')
+const debouncedSearchQuery = ref('')
 const guestCount = ref(1)
-const { user, isLoaded } = useUser()
-const route = useRoute()
-const router = useRouter()
-
 const checkInDate = ref<string | null>(null)
 const checkOutDate = ref<string | null>(null)
-const showGuestDropdown = ref(false)
-const showDateDropdown = ref(false) // Controls the datepicker visibility
-
-// Toggle the visibility of the datepicker dropdown
-const toggleDateDropdown = () => {
-  showDateDropdown.value = !showDateDropdown.value
-}
-
-// Image carousel state
 const currentImageIndexes = ref<{ [key: string]: number }>({})
 const imageLoadErrors = ref<{ [key: string]: boolean }>({})
 
-// Fetch properties from the backend
+const route = useRoute()
+const router = useRouter()
+
 const fetchProperties = async () => {
+  loading.value = true
+  error.value = null
   try {
-    loading.value = true
-    showLoading.value = true
     const response = await axios.get<Property[]>('http://localhost:5000/api/properties')
     properties.value = response.data
     properties.value.forEach(property => {
       currentImageIndexes.value[property._id] = 0
       imageLoadErrors.value[property._id] = false
     })
-    error.value = null
   } catch (err) {
     console.error('Error fetching properties:', err)
-    if (axios.isAxiosError(err)) {
-      error.value = `Error fetching properties: ${err.message}. ${err.response?.data?.message || ''}`
-    } else {
-      error.value = 'An unexpected error occurred while fetching properties'
-    }
+    error.value = 'Failed to load properties. Please try again later.'
     properties.value = []
   } finally {
     loading.value = false
-    showLoading.value = false
   }
 }
 
-// Filter the properties based on search and guest count
-const filteredProperties = computed(() => {
-  return properties.value.filter(property => {
-    const matchesSearch = !searchQuery.value || 
-      property.location.country.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      property.location.city.toLowerCase().includes(searchQuery.value.toLowerCase())
-    const matchesGuests = property.maxGuests >= guestCount.value
-    return matchesSearch && matchesGuests
-  })
-})
-
-const debouncedSearch = debounce((query: string) => {
-  searchQuery.value = query
-}, 300)
-
-const applySearch = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  debouncedSearch(target.value)
-}
-
-const updateGuestCount = (count: number) => {
-  guestCount.value = count
-}
-
-const toggleGuestDropdown = () => {
-  showGuestDropdown.value = !showGuestDropdown.value
-}
-
-// Image carousel navigation
-const nextImage = (propertyId: string) => {
-  const property = properties.value.find(p => p._id === propertyId)
-  if (property && property.images) {
-    currentImageIndexes.value[propertyId] = (currentImageIndexes.value[propertyId] + 1) % property.images.length
-  }
-}
-
-const prevImage = (propertyId: string) => {
-  const property = properties.value.find(p => p._id === propertyId)
-  if (property && property.images) {
-    currentImageIndexes.value[propertyId] = (currentImageIndexes.value[propertyId] - 1 + property.images.length) % property.images.length
-  }
-}
-
-const handleImageError = (propertyId: string) => {
-  imageLoadErrors.value[propertyId] = true
-}
-
+//image handling
 const getCurrentImage = (property: Property): string => {
   if (!property.images || property.images.length === 0 || imageLoadErrors.value[property._id]) {
     return '/path/to/placeholder-image.jpg' 
@@ -115,27 +48,77 @@ const getCurrentImage = (property: Property): string => {
   return property.images[currentImageIndexes.value[property._id]]
 }
 
-// Watcher to sync URL with changes in check-in/check-out dates, guest count, etc.
-watch([checkInDate, checkOutDate, searchQuery, guestCount], ([newCheckIn, newCheckOut, newSearch, newGuestCount]) => {
-  router.replace({
-    query: {
-      ...route.query,
-      checkIn: newCheckIn,
-      checkOut: newCheckOut,
-      search: newSearch,
-      guests: newGuestCount
-    }
+const handleImageError = (propertyId: string) => {
+  imageLoadErrors.value[propertyId] = true
+}
+
+const nextImage = (propertyId: string) => {
+  const property = properties.value.find(p => p._id === propertyId)
+  if (property) {
+    const totalImages = property.images.length
+    currentImageIndexes.value[propertyId] = (currentImageIndexes.value[propertyId] + 1) % totalImages
+  }
+}
+
+const prevImage = (propertyId: string) => {
+  const property = properties.value.find(p => p._id === propertyId)
+  if (property) {
+    const totalImages = property.images.length
+    currentImageIndexes.value[propertyId] = (currentImageIndexes.value[propertyId] - 1 + totalImages) % totalImages
+  }
+}
+
+//filtering
+const updateDebouncedSearchQuery = debounce((value: string) => {
+  debouncedSearchQuery.value = value
+}, 300)
+
+watch(searchQuery, (newValue) => {
+  updateDebouncedSearchQuery(newValue)
+})
+
+const filteredProperties = computed(() => {
+  return properties.value.filter(property => {
+    const matchesSearch = !debouncedSearchQuery.value || 
+      property.location.country.toLowerCase().includes(debouncedSearchQuery.value.toLowerCase()) ||
+      property.location.city.toLowerCase().includes(debouncedSearchQuery.value.toLowerCase())
+    const matchesGuests = property.maxGuests >= guestCount.value
+    return matchesSearch && matchesGuests
   })
 })
 
-watch([user, isLoaded], async ([newUser, loaded]) => {
-  if (newUser && loaded) {
-    await fetchProperties()
-  }
+//handle filters update
+const handleFilters = (filters: {
+  searchQuery: string,
+  checkInDate: string | null,
+  checkOutDate: string | null,
+  guestCount: number
+}) => {
+  searchQuery.value = filters.searchQuery
+  checkInDate.value = filters.checkInDate
+  checkOutDate.value = filters.checkOutDate
+  guestCount.value = filters.guestCount
+}
+
+//URL syncing
+watch([checkInDate, checkOutDate, debouncedSearchQuery, guestCount], () => {
+  nextTick(() => {
+    router.replace({
+      query: {
+        ...route.query,
+        checkIn: checkInDate.value,
+        checkOut: checkOutDate.value,
+        search: debouncedSearchQuery.value,
+        guests: guestCount.value?.toString()
+      }
+    })
+  })
 })
 
+//initialization
 onMounted(async () => {
   await fetchProperties()
+  searchQuery.value = route.query.search as string || ''
   checkInDate.value = route.query.checkIn as string || null
   checkOutDate.value = route.query.checkOut as string || null
   guestCount.value = Number(route.query.guests) || 1
@@ -144,194 +127,115 @@ onMounted(async () => {
 
 <template>
   <div class="property-list-page">
-    <div class="filters-container">
-      <div class="filters-wrapper">
-        <!-- Search filter -->
-        <div class="filter-item search-filter">
-          <i class="fas fa-search"></i>
-          <input
-            v-model="searchQuery"
-            @input="applySearch"
-            placeholder="Sök destination"
-            type="text"
-            class="property-input"
-          />
-        </div>
-
-        <!-- Date filter with toggle -->
-        <div class="filter-item date-filters">
-          <div class="date-input">
-            <div>
-              <button @click="toggleDateDropdown" class="date-toggle-button">
-                Date
-              </button>
-              <p>Lägg till datum</p>
-
-            </div>
-            <div v-if="showDateDropdown" class="date-dropdown">
-              <label>Check in</label>
-              <Datepicker v-model="checkInDate" placeholder="Select check-in date" />
-              <label>Check out</label>
-              <Datepicker v-model="checkOutDate" placeholder="Select check-out date" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Guest filter -->
-        <div class="filter-item guest-filter">
-          <GuestFilter @updateGuestCount="updateGuestCount" />
-        </div>
-      </div>
-    </div>
-
-    <!-- Property listing -->
+    <FilterControls 
+      :initialSearchQuery="searchQuery"
+      :initialCheckInDate="checkInDate"
+      :initialCheckOutDate="checkOutDate"
+      :initialGuestCount="guestCount"
+      @filterUpdated="handleFilters" 
+    />
+    
     <h1 class="property-title">Populära destinationer</h1>
-    <div v-if="showLoading" class="loading-indicator">Laddar...</div>
-    <div v-if="error">{{ error }}</div>
-    <TransitionGroup name="property-list" tag="ul" class="property-list">
-      <li v-for="property in filteredProperties" :key="property._id" class="property-item">
+    
+    <div v-if="loading" class="loading-indicator">Laddar...</div>
+    <div v-if="error" class="error-message">{{ error }}</div>
+    
+    <TransitionGroup 
+      name="property-list" 
+      tag="div" 
+      class="property-grid"
+    >
+      <div 
+        v-for="property in filteredProperties" 
+        :key="property._id" 
+        class="property-card"
+      >
         <div class="property-image-container">
-          <transition name="fade" mode="out-in">
-            <img 
-              :key="currentImageIndexes[property._id]"
-              :src="getCurrentImage(property)"
-              :alt="property.title"
-              @error="handleImageError(property._id)"
-              class="property-image"
-            />
-          </transition>
-
-          <button 
-            v-if="property.images && property.images.length > 1" 
-            @click="prevImage(property._id)" 
-            class="carousel-button prev"
-          >
-            &lt;
-          </button>
-          <button 
-            v-if="property.images && property.images.length > 1" 
-            @click="nextImage(property._id)" 
-            class="carousel-button next"
-          >
-            &gt;
-          </button>
+          <img 
+            :src="getCurrentImage(property)" 
+            @error="handleImageError(property._id)"
+            alt="Property Image"
+            class="property-image"
+          />
           <div class="favorite-button-overlay">
-            <FavoritesManager
-              :propertyId="property._id"
-              @favoriteToggled="(propertyId: string) => $emit('favoriteToggled', propertyId)"
-            />
+            <FavoritesManager :propertyId="property._id" />
           </div>
+          <button class="carousel-button prev" @click.prevent="prevImage(property._id)">‹</button>
+          <button class="carousel-button next" @click.prevent="nextImage(property._id)">›</button>
         </div>
-        <router-link :to="{
-          name: 'PropertyDetail',
-          params: { id: property._id },
-          query: {
-            checkIn: checkInDate,
-            checkOut: checkOutDate
-          }
-        }">
-          <div class="title-rating-container">
-            <h3>{{ property.title }}</h3>
-            <div class="rating">
-              <i class="fas fa-star"></i>
-              {{ property.rating }}
+        <router-link 
+          :to="{
+            name: 'PropertyDetail',
+            params: { id: property._id },
+            query: { checkIn: checkInDate, checkOut: checkOutDate }
+          }"
+          class="property-link"
+        >
+          <div class="property-info">
+            <div class="title-rating-container">
+              <h3 class="property-title">{{ property.title }}</h3>
+              <div class="rating">
+                <i class="fas fa-star"></i>
+                {{ property.rating.toFixed(1) }}
+              </div>
             </div>
+            <p class="property-details">{{ property.rooms }} rum · {{ property.beds }} sängar</p>
+            <span class="price">{{ property.pricePerNight }} kr per natt</span>
           </div>
-          <div class="property-details">
-            <p>{{ property.rooms }} rum · {{ property.beds }} sängar</p>
-          </div> 
-          <span class="price">{{ property.pricePerNight }} kr</span> 
         </router-link>
-      </li>
+      </div>
     </TransitionGroup>
   </div>
 </template>
 
 <style scoped>
-.date-toggle-button {
-  background-color: #f5f5f5;
-  border: 1px solid #ccc;
-  padding: 10px;
-  cursor: pointer;
-  font-size: 16px;
-  border-radius: 4px;
-}
-
-.date-toggle-button:hover {
-  background-color: #e0e0e0;
-}
-
-.date-dropdown {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-
-
-.property-title {
-  text-align: center;
-}
-
 .property-list-page {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 20px;
 }
 
-.filters-container {
-  border-radius: 100px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
-  padding: 15px 20px;
+.property-title {
+  text-align: center;
   margin-bottom: 30px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
+  font-size: 2rem;
+  color: #333;
 }
 
-.filters-wrapper {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  gap: 20px;
+.loading-indicator, .error-message {
+  text-align: center;
+  padding: 20px;
+  font-size: 1.2rem;
+  color: #666;
 }
 
-.filter-item {
-  flex: 1;
+.error-message {
+  color: #d32f2f;
 }
 
-.property-input{
-  border: none;
-  margin-left: 5px;
-}
-
-.property-list {
+.property-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 30px;
 }
 
-.property-item {
-  position: relative;
-  list-style-type: none;
+.property-card {
+  background-color: #fff;
   border-radius: 12px;
-  padding: 10px;
-  transition: transform 0.3s ease;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.property-item:hover {
+.property-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .property-image-container {
   position: relative;
   width: 100%;
-  height: 250px;
-  margin-bottom: 1rem;
+  height: 200px;
   overflow: hidden;
-  border-radius: 12px;
 }
 
 .property-image {
@@ -341,11 +245,22 @@ onMounted(async () => {
   transition: transform 0.3s ease;
 }
 
+.property-card:hover {
+  transform: scale(1.05);
+}
+
+.favorite-button-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+}
+
 .carousel-button {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.7);
   border: none;
   border-radius: 50%;
   width: 30px;
@@ -355,6 +270,8 @@ onMounted(async () => {
   justify-content: center;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  font-size: 20px;
+  color: #333;
 }
 
 .carousel-button:hover {
@@ -369,57 +286,69 @@ onMounted(async () => {
   right: 10px;
 }
 
-.favorite-button-overlay {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 10;
-  padding: 8px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.property-item a {
+.property-link {
   text-decoration: none;
   color: inherit;
+}
+
+.property-info {
+  padding: 15px;
 }
 
 .title-rating-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 10px;
 }
 
-.title-rating-container h3 {
+.property-title {
   margin: 0;
+  font-size: 18px;
+  color: #333;
 }
 
 .rating {
   display: flex;
   align-items: center;
+  font-size: 14px;
 }
 
 .rating i {
   margin-right: 4px;
 }
 
-@media (max-width: 1024px) {
-  .property-list {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.property-details {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: #666;
+}
+
+.price {
+  display: block;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* Transitions */
+.property-list-enter-active,
+.property-list-leave-active {
+  transition: all 0.5s ease;
+}
+
+.property-list-enter-from,
+.property-list-leave-to {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.property-list-move {
+  transition: transform 0.5s ease;
 }
 
 @media (max-width: 768px) {
-  .property-list {
+  .property-grid {
     grid-template-columns: 1fr;
-  }
-
-  .filters-wrapper {
-    flex-direction: column;
-    gap: 10px;
   }
 }
 </style>

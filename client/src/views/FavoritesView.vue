@@ -7,11 +7,12 @@ import FavoriteManager from '@/components/FavoriteManager.vue'
 const favorites = ref<Property[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
+const currentImageIndexes = ref<{ [key: string]: number }>({})
+const imageLoadErrors = ref<{ [key: string]: boolean }>({})
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 const { user, isLoaded } = useUser()
 
-//fetches favorites after the user is loaded
 const fetchFavorites = async () => {
   if (!user.value || !isLoaded.value) return
 
@@ -21,6 +22,12 @@ const fetchFavorites = async () => {
     const favoriteIds = response.data.map((favorite: { propertyId: string }) => favorite.propertyId)
     const propertyResponses = await Promise.all(favoriteIds.map((id: string) => axios.get(`${API_BASE_URL}/api/properties/${id}`)))
     favorites.value = propertyResponses.map(response => response.data)
+
+    favorites.value.forEach(property => {
+      currentImageIndexes.value[property._id] = 0
+      imageLoadErrors.value[property._id] = false
+    })
+
     error.value = null
   } catch (err) {
     console.error('Error fetching favorites:', err)
@@ -34,9 +41,35 @@ const fetchFavorites = async () => {
   }
 }
 
-//handles favorite toggled event
 const handleFavoriteToggled = (propertyId: string) => {
   favorites.value = favorites.value.filter(property => property._id !== propertyId)
+}
+
+const getCurrentImage = (property: Property): string => {
+  if (!property.images || property.images.length === 0 || imageLoadErrors.value[property._id]) {
+    return '/path/to/placeholder-image.jpg' 
+  }
+  return property.images[currentImageIndexes.value[property._id]]
+}
+
+const handleImageError = (propertyId: string) => {
+  imageLoadErrors.value[propertyId] = true
+}
+
+const nextImage = (propertyId: string) => {
+  const property = favorites.value.find(p => p._id === propertyId)
+  if (property) {
+    const totalImages = property.images.length
+    currentImageIndexes.value[propertyId] = (currentImageIndexes.value[propertyId] + 1) % totalImages
+  }
+}
+
+const prevImage = (propertyId: string) => {
+  const property = favorites.value.find(p => p._id === propertyId)
+  if (property) {
+    const totalImages = property.images.length
+    currentImageIndexes.value[propertyId] = (currentImageIndexes.value[propertyId] - 1 + totalImages) % totalImages
+  }
 }
 
 watch([user, isLoaded], ([newUser, loaded]) => {
@@ -57,41 +90,54 @@ onMounted(() => {
     <h1 class="favorite-title">Favoriter</h1>
 
     <div v-if="loading" class="loading-indicator">Laddar...</div>
-    <div v-if="error">{{ error }}</div>
+    <div v-if="error" class="error-message">{{ error }}</div>
     <div v-if="!loading && favorites.length === 0" class="no-favorites">
       Inga favoriter
     </div>
 
-    <TransitionGroup name="favorite-list" tag="ul" class="favorite-list">
-      <li v-for="(property, index) in favorites" :key="index" class="favorite-item">
+    <TransitionGroup name="favorite-list" tag="div" class="favorite-grid">
+      <div 
+        v-for="(property, index) in favorites" 
+        :key="property._id" 
+        class="favorite-card"
+      >
         <div class="favorite-image-container">
-            <img 
-              v-if="property.images && property.images.length > 0"
-              :src="property.images[0]"
-              :alt="`Property image for ${property.title}`"
-              class="favorite-image"
-            />
-          <div class="favorite-manager-wrapper">
+          <img 
+            :src="getCurrentImage(property)" 
+            @error="handleImageError(property._id)"
+            alt="Favorite Property Image"
+            class="favorite-image"
+          />
+          <div class="favorite-button-overlay">
             <FavoriteManager 
               :propertyId="property._id"
               @favoriteToggled="handleFavoriteToggled"
             />
           </div>
+          <button class="carousel-button prev" @click.prevent="prevImage(property._id)">‹</button>
+          <button class="carousel-button next" @click.prevent="nextImage(property._id)">›</button>
         </div>
-
-          <router-link :to="{ name: 'PropertyDetail', params: { id: property._id } }">
-        <div class="title-rating-price-container">
-          <div class="title-rating-row">
-            <h3>{{ property.title }}</h3>
-            <p class="property-rating">{{ property.rating }}★</p>
+        <router-link 
+          :to="{
+            name: 'PropertyDetail',
+            params: { id: property._id },
+            query: { checkIn: '', checkOut: '' }
+          }"
+          class="favorite-link"
+        >
+          <div class="favorite-info">
+            <div class="title-rating-container">
+              <h3 class="favorite-title">{{ property.title }}</h3>
+              <div class="rating">
+                <i class="fas fa-star"></i>
+                {{ property.rating.toFixed(1) }}
+              </div>
+            </div>
+            <p class="favorite-details">{{ property.rooms }} rum · {{ property.beds }} sängar</p>
+            <span class="price">{{ property.pricePerNight }} kr per natt</span>
           </div>
-          <div class="favorite-details">
-            <p>{{ property.rooms }} rum · {{ property.beds }} sängar</p>
-          </div>
-          <p>{{ property.pricePerNight }} kr</p>
-        </div>
-          </router-link>
-      </li>
+        </router-link>
+      </div>
     </TransitionGroup>
   </div>
 </template>
@@ -99,43 +145,51 @@ onMounted(() => {
 <style scoped>
 .favorite-list-page {
   max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
+  padding: 20px;
+  margin: 100px;
 }
 
 .favorite-title {
   text-align: center;
+  margin-bottom: 30px;
   font-size: 2rem;
-  margin-bottom: 1.5rem;
+  color: #333;
 }
-.favorite-list {
+
+.loading-indicator, .error-message {
+  text-align: center;
+  padding: 20px;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.error-message {
+  color: #d32f2f;
+}
+
+.favorite-grid {
   display: grid;
-  list-style-type: none;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 30px;
-  padding: 0;
 }
 
-.favorite-item {
-  position: relative;
-  padding: 15px;
-  border-radius: 12px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+.favorite-card {
   background-color: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.favorite-item:hover {
+.favorite-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15), 0 12px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .favorite-image-container {
   position: relative;
   width: 100%;
   height: 200px;
-  margin-bottom: 1rem;
   overflow: hidden;
-  border-radius: 12px;
 }
 
 .favorite-image {
@@ -145,50 +199,94 @@ onMounted(() => {
   transition: transform 0.3s ease;
 }
 
-.favorite-manager-wrapper {
+.favorite-card:hover {
+  transform: scale(1.05);
+}
+
+.favorite-button-overlay {
   position: absolute;
   top: 10px;
   right: 10px;
   z-index: 10;
 }
 
-.title-rating-price-container {
-  padding: 10px 0;
+.carousel-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(255, 255, 255, 0.7);
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-size: 20px;
+  color: #333;
 }
 
-.title-rating-row {
+.carousel-button:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.carousel-button.prev {
+  left: 10px;
+}
+
+.carousel-button.next {
+  right: 10px;
+}
+
+.favorite-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.favorite-info {
+  padding: 15px;
+}
+
+.title-rating-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 10px;
 }
 
-.property-rating {
-  font-size: 1.2rem;
+.favorite-title {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
 }
 
-.loading-indicator {
-  text-align: center;
-  margin: 20px 0;
-  font-size: 1.2rem;
-}
-
-.no-favorites {
+.rating {
   display: flex;
-  justify-content: center;
-}
-a{
-  text-decoration: none;
-  color: black;
+  align-items: center;
+  font-size: 14px;
 }
 
-@media (max-width: 1024px) {
-  .favorite-list {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.rating i {
+  margin-right: 4px;
 }
+
+.favorite-details {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: #666;
+}
+
+.price {
+  display: block;
+  font-weight: bold;
+  font-size: 16px;
+}
+
 
 @media (max-width: 768px) {
-  .favorite-list {
+  .favorite-grid {
     grid-template-columns: 1fr;
   }
 }
