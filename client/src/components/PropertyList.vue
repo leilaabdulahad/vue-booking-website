@@ -9,7 +9,6 @@ import { useRoute, useRouter } from 'vue-router'
 import Datepicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 
-
 const emit = defineEmits(['favoriteToggled'])
 
 const properties = ref<Property[]>([])
@@ -25,16 +24,18 @@ const router = useRouter()
 const checkInDate = ref<string | null>(null)
 const checkOutDate = ref<string | null>(null)
 const showGuestDropdown = ref(false)
-const showDateDropdown = ref(false) 
+const showDateDropdown = ref(false) // Controls the datepicker visibility
 
+// Toggle the visibility of the datepicker dropdown
 const toggleDateDropdown = () => {
   showDateDropdown.value = !showDateDropdown.value
 }
 
-//refs for image carousel
+// Image carousel state
 const currentImageIndexes = ref<{ [key: string]: number }>({})
 const imageLoadErrors = ref<{ [key: string]: boolean }>({})
 
+// Fetch properties from the backend
 const fetchProperties = async () => {
   try {
     loading.value = true
@@ -60,6 +61,7 @@ const fetchProperties = async () => {
   }
 }
 
+// Filter the properties based on search and guest count
 const filteredProperties = computed(() => {
   return properties.value.filter(property => {
     const matchesSearch = !searchQuery.value || 
@@ -87,7 +89,7 @@ const toggleGuestDropdown = () => {
   showGuestDropdown.value = !showGuestDropdown.value
 }
 
-//methods for image carousel
+// Image carousel navigation
 const nextImage = (propertyId: string) => {
   const property = properties.value.find(p => p._id === propertyId)
   if (property && property.images) {
@@ -113,6 +115,7 @@ const getCurrentImage = (property: Property): string => {
   return property.images[currentImageIndexes.value[property._id]]
 }
 
+// Watcher to sync URL with changes in check-in/check-out dates, guest count, etc.
 watch([checkInDate, checkOutDate, searchQuery, guestCount], ([newCheckIn, newCheckOut, newSearch, newGuestCount]) => {
   router.replace({
     query: {
@@ -143,6 +146,7 @@ onMounted(async () => {
   <div class="property-list-page">
     <div class="filters-container">
       <div class="filters-wrapper">
+        <!-- Search filter -->
         <div class="filter-item search-filter">
           <i class="fas fa-search"></i>
           <input
@@ -153,21 +157,34 @@ onMounted(async () => {
             class="property-input"
           />
         </div>
+
+        <!-- Date filter with toggle -->
         <div class="filter-item date-filters">
           <div class="date-input">
-            <label>Check in</label>
-            <Datepicker v-model="checkInDate" placeholder="Select check-in date" />
-          </div>
-          <div class="date-input">
-            <label>Check out</label>
-            <Datepicker v-model="checkOutDate" placeholder="Select check-out date" />
+            <div>
+              <button @click="toggleDateDropdown" class="date-toggle-button">
+                Date
+              </button>
+              <p>Lägg till datum</p>
+
+            </div>
+            <div v-if="showDateDropdown" class="date-dropdown">
+              <label>Check in</label>
+              <Datepicker v-model="checkInDate" placeholder="Select check-in date" />
+              <label>Check out</label>
+              <Datepicker v-model="checkOutDate" placeholder="Select check-out date" />
+            </div>
           </div>
         </div>
+
+        <!-- Guest filter -->
         <div class="filter-item guest-filter">
           <GuestFilter @updateGuestCount="updateGuestCount" />
         </div>
       </div>
     </div>
+
+    <!-- Property listing -->
     <h1 class="property-title">Populära destinationer</h1>
     <div v-if="showLoading" class="loading-indicator">Laddar...</div>
     <div v-if="error">{{ error }}</div>
@@ -231,6 +248,28 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.date-toggle-button {
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 4px;
+}
+
+.date-toggle-button:hover {
+  background-color: #e0e0e0;
+}
+
+.date-dropdown {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+
+
 .property-title {
   text-align: center;
 }
