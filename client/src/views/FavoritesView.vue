@@ -3,13 +3,13 @@ import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { useUser } from 'vue-clerk'
 import FavoriteManager from '@/components/FavoriteManager.vue'
+import {favoritesService} from '../services/favoritesService'
 
 const favorites = ref<Property[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const currentImageIndexes = ref<{ [key: string]: number }>({})
 const imageLoadErrors = ref<{ [key: string]: boolean }>({})
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 const { user, isLoaded } = useUser()
 
@@ -17,27 +17,27 @@ const fetchFavorites = async () => {
   if (!user.value || !isLoaded.value) return
 
   try {
-    loading.value = true
-    const response = await axios.get(`${API_BASE_URL}/api/favorites/${user.value.id}`)
-    const favoriteIds = response.data.map((favorite: { propertyId: string }) => favorite.propertyId)
-    const propertyResponses = await Promise.all(favoriteIds.map((id: string) => axios.get(`${API_BASE_URL}/api/properties/${id}`)))
-    favorites.value = propertyResponses.map(response => response.data)
+    loading.value = true;
+    const favoriteIds = await favoritesService.fetchFavorites(user.value.id);
+    const propertyResponses = await Promise.all(favoriteIds.map((id: { propertyId: string }) => favoritesService.fetchPropertyById(id.propertyId)));
+
+    favorites.value = propertyResponses;
 
     favorites.value.forEach(property => {
-      currentImageIndexes.value[property._id] = 0
-      imageLoadErrors.value[property._id] = false
-    })
+      currentImageIndexes.value[property._id] = 0;
+      imageLoadErrors.value[property._id] = false;
+    });
 
-    error.value = null
+    error.value = null;
   } catch (err) {
-    console.error('Error fetching favorites:', err)
+    console.error('Error fetching favorites:', err);
     if (axios.isAxiosError(err)) {
-      error.value = `Error fetching favorites: ${err.message}. ${err.response?.data?.message || ''}`
+      error.value = `Error fetching favorites: ${err.message}. ${err.response?.data?.message || ''}`;
     } else {
-      error.value = 'An unexpected error occurred while fetching favorites'
+      error.value = 'An unexpected error occurred while fetching favorites';
     }
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
