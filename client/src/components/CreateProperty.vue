@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { SignInButton, useUser } from 'vue-clerk'
-import axios from 'axios'
+import { syncUserWithDatabase } from '../services/userService'
+import { createNewProperty } from '../services/propertyService'
 
 const title = ref('')
 const description = ref('')
-const country = ref('') 
-const city = ref('')     
+const country = ref('')
+const city = ref('')
 const maxGuests = ref(0)
 const pricePerNight = ref(0)
 const rooms = ref(0)
@@ -20,10 +21,7 @@ const { isSignedIn, user } = useUser()
 watch([isSignedIn, user], async ([newIsSignedIn, newUser]) => {
   if (newIsSignedIn && newUser) {
     try {
-      await axios.post('http://localhost:5000/api/users', {
-        clerkUserId: newUser.id
-      })
-      console.log('User synced with database')
+      await syncUserWithDatabase(newUser.id)
     } catch (error) {
       console.error('Error syncing user with database:', error)
     }
@@ -33,7 +31,7 @@ watch([isSignedIn, user], async ([newIsSignedIn, newUser]) => {
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
   if (target.files) {
-    selectedFiles.value = Array.from(target.files).slice(0, 10) 
+    selectedFiles.value = Array.from(target.files).slice(0, 10)
   }
 }
 
@@ -47,8 +45,8 @@ const createProperty = async () => {
     const formData = new FormData()
     formData.append('title', title.value)
     formData.append('description', description.value)
-    formData.append('country', country.value) 
-    formData.append('city', city.value)       
+    formData.append('country', country.value)
+    formData.append('city', city.value)
     formData.append('maxGuests', maxGuests.value.toString())
     formData.append('pricePerNight', pricePerNight.value.toString())
     formData.append('rooms', rooms.value.toString())
@@ -60,13 +58,7 @@ const createProperty = async () => {
       formData.append('images', file)
     })
 
-    const response = await axios.post('http://localhost:5000/api/properties', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
-
-    console.log('Property created:', response.data)
+    await createNewProperty(formData)
     resetForm()
   } catch (error) {
     console.error('Error creating property:', error)
@@ -78,7 +70,7 @@ const resetForm = () => {
   title.value = ''
   description.value = ''
   country.value = ''
-  city.value = ''  
+  city.value = ''
   maxGuests.value = 0
   pricePerNight.value = 0
   rooms.value = 0
@@ -88,6 +80,7 @@ const resetForm = () => {
   errorMessage.value = null
 }
 </script>
+
 
 <template>
   <div class="create-property">
