@@ -1,3 +1,43 @@
+<script setup lang="ts">
+import { ref, watch } from 'vue'
+import GuestFilter from '@/components/GuestFilter.vue'
+import Datepicker from '@vuepic/vue-datepicker'
+import SearchFilter from '@/components/SearchFilter.vue'
+import '@vuepic/vue-datepicker/dist/main.css'
+
+//emits event to parent when filters are updated
+const emit = defineEmits(['filterUpdated'])
+
+//reactive variables
+const searchQuery = ref('')
+const checkInDate = ref<string | null>(null)
+const checkOutDate = ref<string | null>(null)
+const guestCount = ref(1)
+const showDateDropdown = ref(false)
+
+const toggleDateDropdown = () => {
+  showDateDropdown.value = !showDateDropdown.value
+}
+
+//watchers to emit changes when the filters change
+watch([searchQuery, checkInDate, checkOutDate, guestCount], () => {
+  emit('filterUpdated', {
+    searchQuery: searchQuery.value,
+    checkInDate: checkInDate.value,
+    checkOutDate: checkOutDate.value,
+    guestCount: guestCount.value
+  })
+})
+
+const handleSearch = (query: string) => {
+  searchQuery.value = query
+}
+
+const updateGuestCount = (count: number) => {
+  guestCount.value = count
+}
+</script>
+
 <template>
     <div class="filters-wrapper">
       <!-- Search filter -->
@@ -101,43 +141,4 @@
   }
   </style>
   
-  <script setup lang="ts">
-  import { ref, watch } from 'vue'
-  import GuestFilter from '@/components/GuestFilter.vue'
-  import Datepicker from '@vuepic/vue-datepicker'
-  import SearchFilter from '@/components/SearchFilter.vue'
-  import '@vuepic/vue-datepicker/dist/main.css'
-  
-  //emits event to parent when filters are updated
-  const emit = defineEmits(['filterUpdated'])
-  
-  //reactive variables
-  const searchQuery = ref('')
-  const checkInDate = ref<string | null>(null)
-  const checkOutDate = ref<string | null>(null)
-  const guestCount = ref(1)
-  const showDateDropdown = ref(false)
-  
-  const toggleDateDropdown = () => {
-    showDateDropdown.value = !showDateDropdown.value
-  }
-  
-  //watchers to emit changes when the filters change
-  watch([searchQuery, checkInDate, checkOutDate, guestCount], () => {
-    emit('filterUpdated', {
-      searchQuery: searchQuery.value,
-      checkInDate: checkInDate.value,
-      checkOutDate: checkOutDate.value,
-      guestCount: guestCount.value
-    })
-  })
-  
-  const handleSearch = (query: string) => {
-    searchQuery.value = query
-  }
-  
-  const updateGuestCount = (count: number) => {
-    guestCount.value = count
-  }
-  </script>
   

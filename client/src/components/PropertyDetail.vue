@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import axios from 'axios'
 import { useUser } from 'vue-clerk'
 import BookProperty from './BookProperty.vue'
 import FavoriteManager from '@/components/FavoriteManager.vue'
+import { fetchPropertyById, updatePropertyDates } from '../services/propertyService'
 
 const route = useRoute()
 const router = useRouter()
@@ -18,36 +18,35 @@ const checkOutDate = ref<string | null>(route.query.checkOut as string || null)
 const currentImageIndex = ref(0)
 
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 const propertyId = computed(() => route.params.id as string)
 
 const fetchProperty = async () => {
   try {
-    const response = await axios.get<Property>(`${API_BASE_URL}/api/properties/${propertyId.value}`)
-    property.value = response.data
+    property.value = await fetchPropertyById(propertyId.value)
   } catch (err) {
     console.error('Error fetching property:', err)
-    if (axios.isAxiosError(err)) {
-      error.value = `Error fetching property: ${err.message}. ${err.response?.data?.message || ''}`
-    } else {
-      error.value = 'An unexpected error occurred while fetching the property'
-    }
+    error.value = 'Failed to fetch property details'
   } finally {
     loading.value = false
   }
 }
 
 //updating dates when booked
-const updateDates = (newCheckIn: string, newCheckOut: string) => {
-  checkInDate.value = newCheckIn
-  checkOutDate.value = newCheckOut
-  router.replace({
-    query: {
-      ...route.query,
-      checkIn: newCheckIn,
-      checkOut: newCheckOut
-    }
-  })
+const updateDates = async (newCheckIn: string, newCheckOut: string) => {
+  try {
+    await updatePropertyDates(propertyId.value, newCheckIn, newCheckOut)
+    checkInDate.value = newCheckIn
+    checkOutDate.value = newCheckOut
+    router.replace({
+      query: {
+        ...route.query,
+        checkIn: newCheckIn,
+        checkOut: newCheckOut
+      }
+    })
+  } catch (err) {
+    console.error('Error updating property dates:', err)
+  }
 }
 
 //methods for image carousel

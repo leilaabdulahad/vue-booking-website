@@ -3,7 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { useUser } from 'vue-clerk'
 import FavoriteManager from '@/components/FavoriteManager.vue'
-import {favoritesService} from '../services/favoritesService'
+import { fetchFavorites as getFavorites, fetchPropertyById } from '../services/favoritesService'
 
 const favorites = ref<Property[]>([])
 const loading = ref(false)
@@ -17,24 +17,26 @@ const fetchFavorites = async () => {
   if (!user.value || !isLoaded.value) return
 
   try {
-    loading.value = true;
-    const favoriteIds = await favoritesService.fetchFavorites(user.value.id);
-    const propertyResponses = await Promise.all(favoriteIds.map((id: { propertyId: string }) => favoritesService.fetchPropertyById(id.propertyId)));
+    loading.value = true
+    const favoriteIds = await getFavorites(user.value.id)
+    const propertyResponses = await Promise.all(
+      favoriteIds.map((id: { propertyId: string }) => fetchPropertyById(id.propertyId))
+    )
 
-    favorites.value = propertyResponses;
+    favorites.value = propertyResponses
 
     favorites.value.forEach(property => {
-      currentImageIndexes.value[property._id] = 0;
-      imageLoadErrors.value[property._id] = false;
-    });
+      currentImageIndexes.value[property._id] = 0
+      imageLoadErrors.value[property._id] = false
+    })
 
-    error.value = null;
+    error.value = null
   } catch (err) {
-    console.error('Error fetching favorites:', err);
+    console.error('Error fetching favorites:', err)
     if (axios.isAxiosError(err)) {
-      error.value = `Error fetching favorites: ${err.message}. ${err.response?.data?.message || ''}`;
+      error.value = `Error fetching favorites: ${err.message}. ${err.response?.data?.message || ''}`
     } else {
-      error.value = 'An unexpected error occurred while fetching favorites';
+      error.value = 'An unexpected error occurred while fetching favorites'
     }
   } finally {
     loading.value = false;
