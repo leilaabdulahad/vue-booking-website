@@ -1,8 +1,10 @@
 import axios from 'axios'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+
 export const fetchUnavailableDates = async (propertyId: string) => {
   try {
-    const response = await axios.get(`http://localhost:5000/api/bookings/unavailable/${propertyId}`)
+    const response = await axios.get(`${API_BASE_URL}/api/bookings/unavailable/${propertyId}`)
     return response.data.unavailableDates.map((booking: any) => ({
       startDate: new Date(booking.startDate),
       endDate: new Date(booking.endDate),
@@ -20,7 +22,7 @@ export const bookProperty = async (
   clerkUserId: string
 ) => {
   try {
-    const response = await axios.post('http://localhost:5000/api/bookings', {
+    const response = await axios.post(`${API_BASE_URL}/api/bookings`, {
       propertyId,
       startDate,
       endDate,

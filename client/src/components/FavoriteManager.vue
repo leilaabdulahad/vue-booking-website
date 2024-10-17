@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import axios from 'axios'
 import { useUser } from 'vue-clerk'
+import { fetchFavoriteStatus, addToFavorites, removeFromFavorites } from '../services/favoritesService'
 
 const props = defineProps<{
   propertyId: string
@@ -14,23 +14,16 @@ const isFavorite = ref(false)
 const loading = ref(false)
 const error = ref<string | null>(null)
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
-const fetchFavoriteStatus = async () => {
+const updateFavoriteStatus = async () => {
   if (!user.value) return
   loading.value = true
   error.value = null
+
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/favorites/${user.value.id}`)
-    isFavorite.value = response.data.some((fav: { propertyId: string }) => fav.propertyId === props.propertyId)
+    isFavorite.value = await fetchFavoriteStatus(user.value.id, props.propertyId)
   } catch (err) {
-    if (axios.isAxiosError(err)) {
-      console.error('Error fetching favorites:', err.response?.data || err.message)
-      error.value = `Failed to fetch favorites: ${err.response?.data?.message || err.message}`
-    } else {
-      console.error('Unexpected error:', err)
-      error.value = 'An unexpected error occurred'
-    }
+    error.value = err instanceof Error ? err.message : 'An unexpected error occurred'
   } finally {
     loading.value = false
   }
@@ -38,51 +31,36 @@ const fetchFavoriteStatus = async () => {
 
 const toggleFavorite = async () => {
   if (!user.value) {
-    alert('Please sign in to manage favorites.')
+    alert('Please sign in to manage favorites')
     return
   }
   loading.value = true
   error.value = null
   try {
-    if (isFavorite.value) {
-      await removeFromFavorites()
+    if(isFavorite.value) {
+      await removeFromFavorites(user.value.id, props.propertyId)
+
     } else {
-      await addToFavorites()
+      await addToFavorites(user.value.id, props.propertyId)
     }
     isFavorite.value = !isFavorite.value
-    emit('favoriteToggled', props.propertyId)
+    emit('favoriteToggled',props.propertyId)
   } catch (err) {
-    console.error('Error toggling favorite:', err)
-    if (axios.isAxiosError(err)) {
-      error.value = `Failed to update favorite: ${err.response?.data?.message || err.message}`
-    } else {
-      error.value = 'An unexpected error occurred while updating favorite'
-    }
+    error.value = err instanceof Error ? err.message : 'An unexpected error occurred'
   } finally {
     loading.value = false
   }
 }
 
-const addToFavorites = async () => {
-  await axios.post(`${API_BASE_URL}/api/favorites`, {
-    clerkUserId: user.value!.id,
-    propertyId: props.propertyId,
-  })
-}
-
-const removeFromFavorites = async () => {
-  await axios.delete(`${API_BASE_URL}/api/favorites/${user.value!.id}/${props.propertyId}`)
-}
-
 onMounted(async () => {
   if (isLoaded.value && user.value) {
-    await fetchFavoriteStatus()
+    await updateFavoriteStatus()
   }
 })
 
 watch([user, isLoaded], async ([newUser, loaded]) => {
   if (newUser && loaded) {
-    await fetchFavoriteStatus()
+    await updateFavoriteStatus()
   }
 })
 </script>
