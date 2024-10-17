@@ -4,6 +4,7 @@ import axios from 'axios'
 import { useUser  } from 'vue-clerk'
 import Datepicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
+import { fetchUnavailableDates, bookProperty } from '../services/bookingService'
 
 const props = defineProps<{
   propertyId: string
@@ -22,14 +23,10 @@ const success = ref('')
 const isLoading = ref(false)
 const { user } = useUser()
 
-const fetchUnavailableDates = async () => {
+const loadUnavailableDates = async () => {
   isLoading.value = true
   try {
-    const response = await axios.get(`http://localhost:5000/api/bookings/unavailable/${props.propertyId}`)
-    unavailableDates.value = response.data.unavailableDates.map((booking: any) => ({
-      startDate: new Date(booking.startDate),
-      endDate: new Date(booking.endDate),
-    }))
+    unavailableDates.value = await fetchUnavailableDates(props.propertyId)
   } catch (err) {
     console.error('Error fetching unavailable dates:', err)
   } finally {
@@ -38,7 +35,7 @@ const fetchUnavailableDates = async () => {
 }
 
 onMounted(() => {
-  fetchUnavailableDates()
+  loadUnavailableDates()
 })
 
 const isDateUnavailable = (date: Date) => {
@@ -49,32 +46,30 @@ const isDateUnavailable = (date: Date) => {
   })
 }
 
-const bookProperty = async () => {
-  isLoading.value = true
+const handleBookProperty = async () => {
+  isLoading.value = true;
   error.value = ''
   success.value = ''
+
   if (!user.value) {
     error.value = 'User not authenticated.'
     isLoading.value = false
     return
   }
+
   if (isDateUnavailable(new Date(localStartDate.value)) || isDateUnavailable(new Date(localEndDate.value))) {
     error.value = 'Selected dates are unavailable.'
     isLoading.value = false
     return
   }
+
   try {
-    const response = await axios.post('http://localhost:5000/api/bookings', {
-      propertyId: props.propertyId,
-      startDate: localStartDate.value,
-      endDate: localEndDate.value,
-      clerkUserId: user.value.id,
-    })
+    await bookProperty(props.propertyId, localStartDate.value, localEndDate.value, user.value.id)
     success.value = 'Booking successful!'
     localStartDate.value = ''
     localEndDate.value = ''
-    fetchUnavailableDates()
-    emit('dateChange', '', '') 
+    loadUnavailableDates()
+    emit('dateChange', '', '')
   } catch (err) {
     if (axios.isAxiosError(err) && err.response) {
       error.value = `Error booking property: ${err.response.data.message || err.message}`
@@ -104,10 +99,11 @@ watch(() => props.checkOut, (newCheckOut) => {
 })
 </script>
 
+
 <template>
   <div class="book-property">
     <h3>Book this property</h3>
-    <form @submit.prevent="bookProperty">
+    <form @submit.prevent="handleBookProperty">
       <div>
         <label for="startDate">Check-in:</label>
         <Datepicker v-model="localStartDate" :min-date="minDate" required />
