@@ -5,7 +5,7 @@ import debounce from 'lodash/debounce'
 import { useRoute, useRouter } from 'vue-router'
 import FilterControls from './FiltersControl.vue'
 import FavoritesManager from './FavoriteManager.vue'
-
+import { fetchProperties } from '../services/propertyService'
 //state
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -21,24 +21,29 @@ const imageLoadErrors = ref<{ [key: string]: boolean }>({})
 const route = useRoute()
 const router = useRouter()
 
-const fetchProperties = async () => {
+//fecthing properties using propertyService
+const loadProperties = async () => {
   loading.value = true
   error.value = null
   try {
-    const response = await axios.get<Property[]>('http://localhost:5000/api/properties')
-    properties.value = response.data
+    const data = await fetchProperties()
+    properties.value = data
     properties.value.forEach(property => {
       currentImageIndexes.value[property._id] = 0
       imageLoadErrors.value[property._id] = false
     })
   } catch (err) {
-    console.error('Error fetching properties:', err)
-    error.value = 'Failed to load properties. Please try again later.'
+    if (err instanceof Error) {
+      error.value = err.message
+    } else {
+      error.value = 'An unknown error occurred while loading properties.'
+    }
     properties.value = []
   } finally {
     loading.value = false
   }
 }
+
 
 //image handling
 const getCurrentImage = (property: Property): string => {
@@ -117,7 +122,7 @@ watch([checkInDate, checkOutDate, debouncedSearchQuery, guestCount], () => {
 
 //initialization
 onMounted(async () => {
-  await fetchProperties()
+  await loadProperties()
   searchQuery.value = route.query.search as string || ''
   checkInDate.value = route.query.checkIn as string || null
   checkOutDate.value = route.query.checkOut as string || null

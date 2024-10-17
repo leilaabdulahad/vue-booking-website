@@ -43,3 +43,18 @@ export const updatePropertyDates = async (propertyId: string, checkInDate: strin
     throw error
   }
 }
+
+export const fetchProperties = async (): Promise<Property[]> => {
+  try {
+    const response = await axios.get<Property[]>('http://localhost:5000/api/properties')
+    return response.data
+  } catch (err) {
+    if (err instanceof Error) {
+      console.error('Error fetching properties:', err.message)
+      throw new Error(err.message)
+    } else {
+      console.error('Unknown error fetching properties:', err)
+      throw new Error('An unknown error occurred while fetching properties.')
+    }
+  }
+}
