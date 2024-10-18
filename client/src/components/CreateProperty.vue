@@ -1,84 +1,18 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { SignInButton, useUser } from 'vue-clerk'
-import { syncUserWithDatabase } from '../services/userService'
-import { createNewProperty } from '../services/propertyService'
+import { useUserSync } from '../composables/useUserSync'
+import { usePropertyForm } from '../composables/usePropertyForm'
 
-const title = ref('')
-const description = ref('')
-const country = ref('')
-const city = ref('')
-const maxGuests = ref(0)
-const pricePerNight = ref(0)
-const rooms = ref(0)
-const beds = ref(0)
-const amenities = ref('')
-const errorMessage = ref<string | null>(null)
-const selectedFiles = ref<File[]>([])
+//syncs user with database when signed in
+const { isSignedIn, user } = useUserSync()
 
-const { isSignedIn, user } = useUser()
+//inititalizing the propertyform and passing the userid
+const {
+  title, description, country, city, maxGuests, pricePerNight, rooms, beds, 
+  amenities, selectedFiles, errorMessage, handleFileUpload, createProperty
+} = usePropertyForm(user.value?.id || '')
 
-watch([isSignedIn, user], async ([newIsSignedIn, newUser]) => {
-  if (newIsSignedIn && newUser) {
-    try {
-      await syncUserWithDatabase(newUser.id)
-    } catch (error) {
-      console.error('Error syncing user with database:', error)
-    }
-  }
-}, { immediate: true })
-
-const handleFileUpload = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  if (target.files) {
-    selectedFiles.value = Array.from(target.files).slice(0, 10)
-  }
-}
-
-const createProperty = async () => {
-  if (!isSignedIn.value || !user.value) {
-    errorMessage.value = 'You must be signed in to create a property.'
-    return
-  }
-
-  try {
-    const formData = new FormData()
-    formData.append('title', title.value)
-    formData.append('description', description.value)
-    formData.append('country', country.value)
-    formData.append('city', city.value)
-    formData.append('maxGuests', maxGuests.value.toString())
-    formData.append('pricePerNight', pricePerNight.value.toString())
-    formData.append('rooms', rooms.value.toString())
-    formData.append('beds', beds.value.toString())
-    formData.append('amenities', amenities.value)
-    formData.append('clerkUserId', user.value.id)
-
-    selectedFiles.value.forEach((file) => {
-      formData.append('images', file)
-    })
-
-    await createNewProperty(formData)
-    resetForm()
-  } catch (error) {
-    console.error('Error creating property:', error)
-    errorMessage.value = 'Failed to create property. Please try again.'
-  }
-}
-
-const resetForm = () => {
-  title.value = ''
-  description.value = ''
-  country.value = ''
-  city.value = ''
-  maxGuests.value = 0
-  pricePerNight.value = 0
-  rooms.value = 0
-  beds.value = 0
-  amenities.value = ''
-  selectedFiles.value = []
-  errorMessage.value = null
-}
 </script>
 
 
