@@ -9,8 +9,19 @@ const { isSignedIn, user } = useUserSync()
 
 //inititalizing the propertyform and passing the userid
 const {
-  title, description, country, city, maxGuests, pricePerNight, rooms, beds, 
-  amenities, selectedFiles, errorMessage, handleFileUpload, createProperty
+  title, 
+  description, 
+  country, 
+  city, 
+  maxGuests, 
+  pricePerNight, 
+  rooms, 
+  beds, 
+  amenities, 
+  selectedFiles, 
+  errorMessage, 
+  handleFileUpload, 
+  createProperty
 } = usePropertyForm(user.value?.id || '')
 
 </script>

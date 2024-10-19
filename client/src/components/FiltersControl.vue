@@ -4,38 +4,26 @@ import GuestFilter from '@/components/GuestFilter.vue'
 import Datepicker from '@vuepic/vue-datepicker'
 import SearchFilter from '@/components/SearchFilter.vue'
 import '@vuepic/vue-datepicker/dist/main.css'
+import { useFilter } from '../composables/useFilter'
+import type { FilterState } from '@/types/filter'
 
 //emits event to parent when filters are updated
-const emit = defineEmits(['filterUpdated'])
+const emit = defineEmits<{
+  (e: 'filterUpdated', state: FilterState): void
+}>()
 
-//reactive variables
-const searchQuery = ref('')
-const checkInDate = ref<string | null>(null)
-const checkOutDate = ref<string | null>(null)
-const guestCount = ref(1)
-const showDateDropdown = ref(false)
+const {
+  searchQuery,
+  checkInDate,
+  checkOutDate,
+  guestCount,
+  showDateDropdown,
+  toggleDateDropdown,
+  handleSearch,
+  updateGuestCount
+} = useFilter(emit)
 
-const toggleDateDropdown = () => {
-  showDateDropdown.value = !showDateDropdown.value
-}
 
-//watchers to emit changes when the filters change
-watch([searchQuery, checkInDate, checkOutDate, guestCount], () => {
-  emit('filterUpdated', {
-    searchQuery: searchQuery.value,
-    checkInDate: checkInDate.value,
-    checkOutDate: checkOutDate.value,
-    guestCount: guestCount.value
-  })
-})
-
-const handleSearch = (query: string) => {
-  searchQuery.value = query
-}
-
-const updateGuestCount = (count: number) => {
-  guestCount.value = count
-}
 </script>
 
 <template>
