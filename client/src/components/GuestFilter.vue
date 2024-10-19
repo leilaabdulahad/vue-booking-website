@@ -1,30 +1,26 @@
 <script setup lang="ts">
+import { useGuestCount } from '@/composables/useGuestCount';
 import { ref } from 'vue'
 
 const emit = defineEmits(['updateGuestCount'])
-const guestCount = ref(1)
-const isDropdownOpen = ref(false)
 
-const incrementGuests = () => {
-  guestCount.value++
-  emit('updateGuestCount', guestCount.value)
+const {
+  guestCount,
+  isDropdownOpen,
+  incrementGuests,
+  decrementGuests,
+  toggleDropdown,
+  closeDropdown
+} = useGuestCount()
+
+const handleIncrement = () => {
+  const newCount = incrementGuests()
+  emit('updateGuestCount', newCount)
 }
 
-const decrementGuests = () => {
-  if (guestCount.value > 1) {
-    guestCount.value--
-    emit('updateGuestCount', guestCount.value)
-  }
-}
-
-const toggleDropdown = () => {
-  isDropdownOpen.value = !isDropdownOpen.value
-}
-
-const closeDropdown = (event: Event) => {
-  if (!(event.target as HTMLElement).closest('.guest-filter')) {
-    isDropdownOpen.value = false
-  }
+const handleDecrement = () => {
+  const newCount = decrementGuests()
+  emit('updateGuestCount', newCount)
 }
 
 if (typeof window !== 'undefined') {
