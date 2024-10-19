@@ -17,26 +17,24 @@ const checkInDate = ref<string | null>(route.query.checkIn as string || null)
 const checkOutDate = ref<string | null>(route.query.checkOut as string || null)
 const currentImageIndex = ref(0)
 
-
 const propertyId = computed(() => route.params.id as string)
 
 const fetchProperty = async () => {
   try {
     property.value = await fetchPropertyById(propertyId.value)
+    loading.value = false
   } catch (err) {
     console.error('Error fetching property:', err)
     error.value = 'Failed to fetch property details'
-  } finally {
     loading.value = false
   }
 }
 
-//updating dates when booked
 const updateDates = async (newCheckIn: string, newCheckOut: string) => {
+  checkInDate.value = newCheckIn
+  checkOutDate.value = newCheckOut
   try {
     await updatePropertyDates(propertyId.value, newCheckIn, newCheckOut)
-    checkInDate.value = newCheckIn
-    checkOutDate.value = newCheckOut
     router.replace({
       query: {
         ...route.query,
@@ -46,21 +44,38 @@ const updateDates = async (newCheckIn: string, newCheckOut: string) => {
     })
   } catch (err) {
     console.error('Error updating property dates:', err)
+    // You might want to show an error message to the user here
   }
 }
 
-//methods for image carousel
 const nextImage = () => {
-  if (property.value && property.value.images) {
+  if (property.value?.images) {
     currentImageIndex.value = (currentImageIndex.value + 1) % property.value.images.length
   }
 }
 
 const prevImage = () => {
-  if (property.value && property.value.images) {
+  if (property.value?.images) {
     currentImageIndex.value = (currentImageIndex.value - 1 + property.value.images.length) % property.value.images.length
   }
 }
+
+const redirectToBookingPage = () => {
+  if (checkInDate.value && checkOutDate.value) {
+    router.push({
+      name: 'BookingPage',
+      query: {
+        propertyId: propertyId.value,
+        checkIn: checkInDate.value,
+        checkOut: checkOutDate.value
+      }
+    })
+  } else {
+    alert('Please select check-in and check-out dates before proceeding')
+  }
+}
+
+const isDateRangeSelected = computed(() => checkInDate.value && checkOutDate.value)
 
 watch(
   () => route.query,
@@ -70,48 +85,53 @@ watch(
   }
 )
 
-onMounted(async () => {
-  await fetchProperty()
-})
-
+onMounted(fetchProperty)
 </script>
 
 <template>
   <div class="detail-container">
-    <div v-if="loading">Loading...</div>
-    <div v-else-if="error">{{ error }}</div>
-    <div v-else-if="property">
+    <div v-if="loading" class="loading">Loading...</div>
+    <div v-else-if="error" class="error">{{ error }}</div>
+    <div v-else-if="property" class="property-details">
       <h2>{{ property.title }}</h2>
-      <div class="image-carousel" v-if="property.images && property.images.length > 0">
+      
+      <div v-if="property.images?.length" class="image-carousel">
         <button class="carousel-arrow left" @click="prevImage">&lt;</button>
         <img :src="property.images[currentImageIndex]" :alt="`Property image ${currentImageIndex + 1}`" />
         <button class="carousel-arrow right" @click="nextImage">&gt;</button>
         <div class="carousel-indicator">
           {{ currentImageIndex + 1 }} / {{ property.images.length }}
         </div>
-        
         <div class="favorite-manager-overlay">
           <FavoriteManager 
             :propertyId="property._id" 
             @favoriteToggled="fetchProperty"  
           />
         </div>
+      </div>
 
+      <div class="property-info">
+        <p><strong>Your host:</strong> {{ property.username || 'Unknown user' }}</p>
+        <p>{{ property.rooms }} rooms · {{ property.beds }} beds</p>
+        <p>{{ property.description }}</p>
+        <p><strong>Price per night:</strong> {{ property.pricePerNight }} kr</p>
+        <p><strong>Amenities:</strong> {{ property.amenities.join(', ') }}</p>
       </div>
-      <div class="property-details">
-        <p><strong>Din värd är:</strong> {{ property.username || 'Unknown user' }}</p>
-        <p>{{ property.rooms }} rum · {{ property.beds }} sängar</p>
+
+      <div class="date-selection">
+        <h3>Select your dates</h3>
+        <BookProperty 
+          :propertyId="property._id" 
+          :checkIn="checkInDate" 
+          :checkOut="checkOutDate"
+          @dateChange="updateDates"
+        />
       </div>
-      <p>{{ property.description }}</p>
-      <p> {{ property.pricePerNight }} kr</p>
-      <p><strong>Bekvämligheter:</strong> {{ property.amenities.join(' ') }}</p>
-      
-      <BookProperty 
-        :propertyId="property._id" 
-        :checkIn="checkInDate" 
-        :checkOut="checkOutDate"
-        @dateChange="updateDates"
-      />
+
+      <div v-if="isDateRangeSelected" class="booking-summary">
+        <p><strong>Selected dates:</strong> {{ checkInDate }} to {{ checkOutDate }}</p>
+        <button @click="redirectToBookingPage" class="book-now-btn">Proceed to Booking</button>
+      </div>
     </div>
   </div>
 </template>
@@ -119,69 +139,64 @@ onMounted(async () => {
 
 <style scoped>
 .detail-container {
-  margin: 100px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.loading, .error {
+  text-align: center;
+  margin-top: 50px;
 }
 
 .image-carousel {
   position: relative;
-  width: 100%;
-  max-width: 914px;
-  margin: 0 auto 1rem;
-  aspect-ratio: 914 / 334;
-  overflow: hidden;
-}
-
-.image-carousel img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  margin-bottom: 20px;
 }
 
 .carousel-arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background-color: transparent;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
   border: none;
-  font-size: 24px;
   padding: 10px;
   cursor: pointer;
 }
 
-.carousel-arrow:hover {
-  cursor: pointer;
-}
-
-.carousel-arrow.left {
-  left: 10px;
-}
-
-.carousel-arrow.right {
-  right: 10px;
-}
+.carousel-arrow.left { left: 10px; }
+.carousel-arrow.right { right: 10px; }
 
 .carousel-indicator {
   position: absolute;
   bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.5);
+  right: 10px;
+  background: rgba(0, 0, 0, 0.5);
   color: white;
   padding: 5px 10px;
-  border-radius: 15px;
 }
 
 .favorite-manager-overlay {
   position: absolute;
   top: 10px;
-  right: 10px; 
-  z-index: 10; 
+  right: 10px;
 }
 
-@media (max-width: 914px) {
-  .image-carousel {
-    width: 100%;
-    aspect-ratio: 914 / 334;
-  }
+.property-info, .date-selection, .booking-summary {
+  margin-bottom: 20px;
+}
+
+.book-now-btn {
+  background-color: #0077cc;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.book-now-btn:hover {
+  background-color: #005fa3;
 }
 </style>

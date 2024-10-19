@@ -19,5 +19,7 @@ interface Property {
   images: string[]
   isFavorite?: boolean 
   rating: number
+  checkInDate?: string
+  checkOutDate?: string
 }
 

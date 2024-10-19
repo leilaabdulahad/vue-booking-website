@@ -1,14 +1,17 @@
 import { ref, watch } from 'vue'
 
-export const useDateRange = (inititalStartDate: string | null, inititalEndDate: string | null) => {
-  const startDate = ref(inititalStartDate || '')
-  const endDate = ref(inititalEndDate || '')
+export const useDateRange = (initialStartDate: string | Date | null, initialEndDate: string | Date | null) => {
+  const formatDate = (date: string | Date | null) => {
+    return date instanceof Date ? date.toISOString().split('T')[0] : date || ''
+  }
+
+  const startDate = ref(formatDate(initialStartDate))
+  const endDate = ref(formatDate(initialEndDate))
   const minDate = ref(new Date().toISOString().split('T')[0])
 
-  //function to update the start and end dates
-  const updateDates = (newStartDate: string, newEndDate: string) => {
-    startDate.value = newStartDate
-    endDate.value = newEndDate
+  const updateDates = (newStartDate: string | Date, newEndDate: string | Date) => {
+    startDate.value = formatDate(newStartDate)
+    endDate.value = formatDate(newEndDate)
   }
 
   watch([startDate, endDate], ([newStartDate, newEndDate]) => {
