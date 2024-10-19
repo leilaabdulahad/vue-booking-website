@@ -1,6 +1,6 @@
 import { ref, watch } from 'vue'
 
-export function useDateRange(inititalStartDate: string | null, inititalEndDate: string | null) {
+export const useDateRange = (inititalStartDate: string | null, inititalEndDate: string | null) => {
   const startDate = ref(inititalStartDate || '')
   const endDate = ref(inititalEndDate || '')
   const minDate = ref(new Date().toISOString().split('T')[0])

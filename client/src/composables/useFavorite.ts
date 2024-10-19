@@ -2,7 +2,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useUser } from 'vue-clerk'
 import { fetchFavoriteStatus, addToFavorites, removeFromFavorites } from '@/services/favoritesService'
 
-export function useFavorite(propertyId: string, emit: (event: 'favoriteToggled', propertyId: string) => void) {
+export const useFavorite = (propertyId: string, emit: (event: 'favoriteToggled', propertyId: string) => void) => {
   const { user, isLoaded } = useUser()
   const isFavorite = ref(false)
   const loading = ref(false)

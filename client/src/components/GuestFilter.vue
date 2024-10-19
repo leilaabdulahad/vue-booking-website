@@ -36,9 +36,9 @@ if (typeof window !== 'undefined') {
     </div>
     <div v-if="isDropdownOpen" class="guest-dropdown">
       <div class="guest-control">
-        <button @click.stop="decrementGuests" class="guest-button" :disabled="guestCount <= 1">-</button>
+        <button @click.stop="handleDecrement" class="guest-button" :disabled="guestCount <= 1">-</button>
         <span class="guest-count">{{ guestCount }}</span>
-        <button @click.stop="incrementGuests" class="guest-button">+</button>
+        <button @click.stop="handleIncrement" class="guest-button">+</button>
       </div>
     </div>
   </div>

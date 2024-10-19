@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import axios from 'axios'
 import { bookProperty } from '../services/bookingService'
 
-export function useBooking(propertyId: string, userId: string) {
+export const useBooking = (propertyId: string, userId: string) => {
   //reactive references for error, success message and loading state
   const error = ref('')
   const success = ref('')

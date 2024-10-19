@@ -2,7 +2,7 @@ import { ref, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import { fetchUnavailableDates } from '../services/bookingService'
 
-export function useUnavailableDates(propertyId: string) {
+export const useUnavailableDates = (propertyId: string) => {
   const unavailableDates: Ref<Booking[]> = ref([])
   const isLoading = ref(false)
 
