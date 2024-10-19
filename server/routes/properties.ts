@@ -12,6 +12,7 @@ router.get('/', async (req: Request, res: Response) => {
     const { search } = req.query
     let filter = {}
 
+    //if a search query is provided, create a filter for properties
     if (search) {
       filter = {
         $or: [
@@ -21,6 +22,7 @@ router.get('/', async (req: Request, res: Response) => {
       }
     }
 
+    //fetch properties, sorted by creation date
     const properties = await Property.find(filter).sort({ createdAt: -1 })
     return res.json(properties)
   } catch (error) {
@@ -29,6 +31,7 @@ router.get('/', async (req: Request, res: Response) => {
   }
 })
 
+//route to create a new property, including img uploads
 router.post('/', upload.array('images', 10), async (req: Request, res: Response) => {
   try {
     const {
@@ -44,6 +47,7 @@ router.post('/', upload.array('images', 10), async (req: Request, res: Response)
       city,    
     } = req.body
 
+    //check if the user exists, if not create new one
     let user = await User.findOne({ clerkUserId })
     if (!user) {
       const clerkUser = await clerkClient.users.getUser(clerkUserId)
@@ -55,6 +59,7 @@ router.post('/', upload.array('images', 10), async (req: Request, res: Response)
     }
 
     const imageUrls = []
+    //uploads imgs to cloudinary and collects their URLs
     if (req.files && Array.isArray(req.files)) {
       for (const file of req.files as Express.Multer.File[]) {
         const result = await cloudinary.uploader.upload(file.path)
@@ -87,6 +92,7 @@ router.post('/', upload.array('images', 10), async (req: Request, res: Response)
   }
 })
 
+//fetches to individual properties
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const property = await Property.findById(req.params.id);
@@ -97,6 +103,29 @@ router.get('/:id', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching property:', error)
     return res.status(500).json({ message: 'Error fetching property', error })
+  }
+})
+
+//route to update checkin/checkout dates for specific properties
+router.patch('/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params
+    const { checkInDate, checkOutDate } = req.body
+
+    const updatedProperty = await Property.findByIdAndUpdate (
+      id,
+      { $set: { checkInDate, checkOutDate } },
+      { new: true }
+    )
+
+    if(!updatedProperty) {
+      return res.status(404).json({ message: 'Property not found' })
+    }
+
+    return res.json(updatedProperty)
+  } catch (error) {
+    console.error('Error updating property dates:', error)
+    return res.status(500).json({ message: 'Error updating property dates:', error})
   }
 })
 
