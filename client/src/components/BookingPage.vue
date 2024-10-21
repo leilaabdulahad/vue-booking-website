@@ -67,13 +67,31 @@ const handleBooking = async () => {
     bookingError.value = 'Please log in to book a property'
     return
   }
+
+  // Collecting user information from the form
+  const firstName = (document.querySelector('input[placeholder="Förnamn"]') as HTMLInputElement)?.value
+  const lastName = (document.querySelector('input[placeholder="Efternamn"]') as HTMLInputElement)?.value
+  const address = (document.querySelector('input[placeholder="Adress"]') as HTMLInputElement)?.value
+  const postalCode = (document.querySelector('input[placeholder="Postnummer"]') as HTMLInputElement)?.value
+  const city = (document.querySelector('input[placeholder="Ort"]') as HTMLInputElement)?.value
+  const email = (document.querySelector('input[placeholder="Mailadress"]') as HTMLInputElement)?.value
+  const phoneNumber = (document.querySelector('input[placeholder="Telefonnummer"]') as HTMLInputElement)?.value
+
   loading.value = true
   try {
     const bookingResult = await bookProperty(
       propertyId,
       checkInDate.value,
       checkOutDate.value,
-      user.value.id
+      user.value.id,
+      numberOfNights.value,
+      firstName,
+      lastName,
+      address,
+      postalCode,
+      city,
+      user.value.emailAddresses[0].emailAddress,
+      phoneNumber
     )
     router.push({
       name: 'BookingConfirmation',
@@ -86,6 +104,7 @@ const handleBooking = async () => {
     loading.value = false
   }
 }
+
 
 const isButtonDisabled = computed(() => {
   return !checkInDate.value || !checkOutDate.value || loading.value

@@ -19,7 +19,15 @@ export const bookProperty = async (
   propertyId: string,
   startDate: string,
   endDate: string,
-  clerkUserId: string
+  clerkUserId: string,
+  numberOfNights: number,
+  firstName: string,
+  lastName: string,
+  address: string,
+  postalCode: string,
+  city: string,
+  email: string,
+  phoneNumber: string
 ) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/api/bookings`, {
@@ -27,6 +35,14 @@ export const bookProperty = async (
       startDate,
       endDate,
       clerkUserId,
+      numberOfNights,
+      firstName,
+      lastName,
+      address,
+      postalCode,
+      city,
+      email,
+      phoneNumber
     })
     return response.data;
   } catch (err) {
@@ -34,3 +50,5 @@ export const bookProperty = async (
     throw err;
   }
 }
+
+

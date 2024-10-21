@@ -1,7 +1,8 @@
- interface Booking {
+interface Booking {
   _id: string
   propertyId: string
   userId: string
+  clerkUserId: string
   firstName: string
   lastName: string
   address: string
@@ -17,4 +18,3 @@
   createdAt: Date
   username: string
 }
-
