@@ -12,6 +12,7 @@
   startDate: Date
   endDate: Date
   totalPrice: number
+  numberOfNights: number
   status: 'pending' | 'confirmed' | 'cancelled'
   createdAt: Date
   username: string
