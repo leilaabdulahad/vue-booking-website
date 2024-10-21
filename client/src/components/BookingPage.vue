@@ -97,7 +97,6 @@ fetchProperty()
 <template>
   <div class="booking-page">
     <div class="header">
-      <span class="back-arrow">←</span>
       <h1>Skicka bokningsförfrågan</h1>
     </div>
     <div v-if="loading" class="loading">Loading property details...</div>
@@ -173,6 +172,7 @@ fetchProperty()
   margin: 0 auto;
   padding: 20px;
   font-family: Arial, sans-serif;
+  margin-top: 50px;
 }
 
 .header {
