@@ -7,7 +7,20 @@ const router = express.Router()
 
 router.post('/', async (req: express.Request, res: express.Response) => {
   try {
-    const { propertyId, startDate, endDate, clerkUserId } = req.body
+    const { 
+      propertyId, 
+      startDate, 
+      endDate, 
+      firstName,
+      lastName,
+      address,
+      postalCode,
+      city,
+      email,
+      phoneNumber,
+      clerkUserId,
+      numberOfNights
+    } = req.body    
 
     //checking if the property exists
     const property = await Property.findById(propertyId)
@@ -50,7 +63,18 @@ router.post('/', async (req: express.Request, res: express.Response) => {
       totalPrice,
       status: 'confirmed',
       username,
-    });
+      firstName,
+      lastName,
+      address,
+      postalCode,
+      city,
+      email,
+      phoneNumber,
+      numberOfNights,
+      createdAt: new Date(),
+      clerkUserId, 
+    })
+    
     await newBooking.save()
 
     return res.status(201).json(newBooking)
