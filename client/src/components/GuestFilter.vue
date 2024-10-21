@@ -29,9 +29,10 @@ if (typeof window !== 'undefined') {
 </script>
 
 <template>
+  <p>Antal</p>
   <div class="guest-filter" @click="toggleDropdown">
     <div class="guest-display">
-      <span>Gäster: {{ guestCount }}</span>
+      <span>Lägg till gäster</span>
       <i class="fas fa-chevron-down" :class="{ 'rotate': isDropdownOpen }"></i>
     </div>
     <div v-if="isDropdownOpen" class="guest-dropdown">
