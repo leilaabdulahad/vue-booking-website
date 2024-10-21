@@ -37,8 +37,9 @@ const {
       <!-- Date filter with toggle -->
       <div class="filter-item date-filters">
         <div class="date-button-container">
+          <p class="date-label">När</p>
           <button @click="toggleDateDropdown" class="date-toggle-button">
-            Date
+            Lägg till datum
           </button>
         </div>
         <div v-if="showDateDropdown" class="date-dropdown">
@@ -58,38 +59,44 @@ const {
   
   <style scoped>
   .filters-wrapper {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-  }
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  flex-wrap: wrap; 
+}
+
   
-  .filter-item {
-    flex: 1;
-    margin: 0 10px;
-  }
+.filter-item {
+  flex: 1 1 30%; 
+  margin: 0 10px;
+  min-width: 200px;
+}
+
   
   .date-filters {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .date-button-container {
+    width: 100%;
     display: flex;
     flex-direction: column; 
     align-items: center; 
   }
   
-  .date-button-container {
-    width: 100%; 
-    display: flex;
-    justify-content: center; 
-  }
-  
-  .filter-label {
-    font-size: 1rem;
+  .date-label {
+    font-size: 1rem; 
     font-weight: 500;
-    margin-bottom: 8px;
+    margin-bottom: 8px; 
     color: #333;
+    margin-right: 60px;
   }
   
   .date-toggle-button {
@@ -97,9 +104,9 @@ const {
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    background-color: transparent;
+    margin-top: 5px; 
   }
-  
- 
   
   .date-dropdown {
     position: absolute;

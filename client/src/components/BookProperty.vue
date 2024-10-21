@@ -54,7 +54,7 @@ watch([startDate, endDate], ([newStartDate, newEndDate], [oldStartDate, oldEndDa
 
 <template>
   <div class="book-property">
-    <h3>Select Dates</h3>
+    <h3 class="book-title">Välj datum</h3>
     <div>
       <label for="startDate">Check-in:</label>
       <Datepicker
@@ -77,3 +77,9 @@ watch([startDate, endDate], ([newStartDate, newEndDate], [oldStartDate, oldEndDa
     </div>
   </div>
 </template>
+
+<style scoped>
+.book-title{
+  text-align: center;
+}
+</style>
