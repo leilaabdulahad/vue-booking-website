@@ -19,6 +19,6 @@ Signed-in users can add properties to their favorites list for easy access later
 Signed-in users can view all their booked properties on a dedicated page.
 
 ## Tech Stack
-Vue 3, TypeScript, Express.js, MongoDB, Clerk
+[![My Skills](https://skillicons.dev/icons?i=vue,css,ts,mongodb,nodejs,express)](https://skillicons.dev)
 
 ## Installation
