@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { useGuestCount } from '@/composables/useGuestCount';
-import { ref } from 'vue'
+import { useGuestCount } from '@/composables/useGuestCount'
 
 const emit = defineEmits(['updateGuestCount'])
 
@@ -29,17 +28,29 @@ if (typeof window !== 'undefined') {
 </script>
 
 <template>
-  <p>Antal</p>
   <div class="guest-filter" @click="toggleDropdown">
     <div class="guest-display">
-      <span>Lägg till gäster</span>
-      <i class="fas fa-chevron-down" :class="{ 'rotate': isDropdownOpen }"></i>
+      <span class="guest-label">Lägg till gäster</span>
     </div>
+
     <div v-if="isDropdownOpen" class="guest-dropdown">
       <div class="guest-control">
-        <button @click.stop="handleDecrement" class="guest-button" :disabled="guestCount <= 1">-</button>
+        <button 
+          @click.stop="handleDecrement" 
+          class="guest-button"
+          :disabled="guestCount <= 1"
+          aria-label="Minska antal gäster"
+        >
+          -
+        </button>
         <span class="guest-count">{{ guestCount }}</span>
-        <button @click.stop="handleIncrement" class="guest-button">+</button>
+        <button 
+          @click.stop="handleIncrement" 
+          class="guest-button"
+          aria-label="Öka antal gäster"
+        >
+          +
+        </button>
       </div>
     </div>
   </div>
@@ -48,48 +59,41 @@ if (typeof window !== 'undefined') {
 <style scoped>
 .guest-filter {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   background-color: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 24px;
-  padding: 8px 16px;
+  border-radius: 100px;
+  padding: 12px 20px;
   cursor: pointer;
   user-select: none;
+  min-width: 200px;
+  transition: all 0.2s ease;
 }
 
+/* change marginleft, do not use - */
 .guest-display {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  min-width: 120px;
+  width: 100%;
+  margin-left: -20px;
 }
 
-.guest-display span {
+.guest-label {
   font-size: 14px;
-  font-weight: 600;
-  color: #333;
-}
-
-.guest-display i {
-  margin-left: 8px;
-  transition: transform 0.3s ease;
-}
-
-.guest-display i.rotate {
-  transform: rotate(180deg);
+  color: #666;
+  font-weight: 500;
 }
 
 .guest-dropdown {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px);
   left: 0;
   right: 0;
-  margin-top: 8px;
   background-color: #fff;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
 }
 
@@ -97,35 +101,35 @@ if (typeof window !== 'undefined') {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 4px;
 }
 
 .guest-button {
-  background-color: #f0f0f0;
-  border: none;
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  font-size: 18px;
+  width: 36px;
+  height: 36px;
+  font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.guest-button:hover {
-  background-color: #e0e0e0;
+  transition: all 0.2s ease;
+  color: #333;
 }
 
 .guest-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  background-color: #f5f5f5;
 }
 
 .guest-count {
   font-size: 16px;
   font-weight: 600;
   color: #333;
-  margin: 0 16px;
+  min-width: 40px;
+  text-align: center;
 }
 </style>

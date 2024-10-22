@@ -27,113 +27,128 @@ const {
 </script>
 
 <template>
-    <div class="filters-wrapper">
-      <!-- Search filter -->
-      <div class="filter-item search-filter">
-        <p class="filter-label">Vart</p>
-        <SearchFilter @search="handleSearch" />
+  <div class="filters-wrapper">
+    <!-- Search filter -->
+    <div class="filter-item search-filter">
+      <p class="filter-label">Vart</p>
+      <SearchFilter @search="handleSearch" />
+    </div>
+    
+    <!-- Date filter with toggle -->
+    <div class="filter-item date-filters">
+      <p class="filter-label">När</p>
+      <div class="date-input-container">
+        <input 
+          type="text" 
+          readonly
+          @click="toggleDateDropdown"
+          :value="checkInDate ? checkInDate : ''" 
+          placeholder="Lägg till datum"
+          class="date-input"
+        />
       </div>
-      
-      <!-- Date filter with toggle -->
-      <div class="filter-item date-filters">
-        <div class="date-button-container">
-          <p class="date-label">När</p>
-          <button @click="toggleDateDropdown" class="date-toggle-button">
-            Lägg till datum
-          </button>
-        </div>
-        <div v-if="showDateDropdown" class="date-dropdown">
-          <label>Check in</label>
-          <Datepicker v-model="checkInDate" placeholder="Select check-in date" />
-          <label>Check out</label>
-          <Datepicker v-model="checkOutDate" placeholder="Select check-out date" />
-        </div>
-      </div>
-      
-      <!-- Guest filter -->
-      <div class="filter-item guest-filter">
-        <GuestFilter @updateGuestCount="updateGuestCount" />
+      <div v-if="showDateDropdown" class="date-dropdown">
+        <label>Check in</label>
+        <Datepicker v-model="checkInDate" placeholder="Select check-in date" />
+        <label>Check out</label>
+        <Datepicker v-model="checkOutDate" placeholder="Select check-out date" />
       </div>
     </div>
-  </template>
-  
-  <style scoped>
-  .filters-wrapper {
+    
+    <!-- Guest filter -->
+    <div class="filter-item guest-filter">
+      <p class="filter-label">Antal</p>
+      <GuestFilter @updateGuestCount="updateGuestCount" />
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.filters-wrapper {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
+  padding: 8px 16px;
   background-color: #ffffff;
-  border-radius: 10px;
+  border-radius: 40px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
-  flex-wrap: wrap; 
+  margin: 0 auto;
+  max-width: 850px;
+  gap: 16px;
 }
 
-  
 .filter-item {
-  flex: 1 1 30%; 
-  margin: 0 10px;
-  min-width: 200px;
+  flex: 1;
+  position: relative;
+  padding: 8px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
-  
-  .date-filters {
-    display: flex;
+.filter-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #222222;
+  margin-bottom: 4px;
+}
+
+.date-input-container {
+  width: 100%;
+}
+
+.date-input {
+  width: 100%;
+  padding: 8px 0;
+  font-size: 14px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #222;
+  cursor: pointer;
+}
+
+.date-input::placeholder {
+  color: #717171;
+}
+
+.filter-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background-color: #e0e0e0;
+}
+
+.date-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  margin-top: 12px;
+  z-index: 1000;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  min-width: 300px;
+}
+
+@media (max-width: 768px) {
+  .filters-wrapper {
     flex-direction: column;
-    align-items: center;
+    border-radius: 16px;
+    padding: 16px;
   }
-  
-  .date-button-container {
+
+  .filter-item {
     width: 100%;
-    display: flex;
-    flex-direction: column; 
-    align-items: center; 
+    padding: 8px 0;
   }
-  
-  .date-label {
-    font-size: 1rem; 
-    font-weight: 500;
-    margin-bottom: 8px; 
-    color: #333;
-    margin-right: 60px;
+
+  .filter-item::after {
+    display: none;
   }
-  
-  .date-toggle-button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    background-color: transparent;
-    margin-top: 5px; 
-  }
-  
-  .date-dropdown {
-    position: absolute;
-    background-color: #ffffff;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 15px;
-    margin-top: 5px;
-    z-index: 1000;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  .date-dropdown label {
-    display: block;
-    margin-bottom: 5px;
-    color: #555;
-  }
-  
-  @media (max-width: 768px) {
-    .filters-wrapper {
-      flex-direction: column;
-    }
-  
-    .filter-item {
-      margin: 10px 0;
-    }
-  }
-  </style>
-  
-  
+}
+</style>
