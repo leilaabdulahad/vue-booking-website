@@ -16,6 +16,7 @@ interface IProperty extends Document {
   rating: number
   checkInDate?: Date
   checkOutDate?: Date
+  isOffer?: boolean 
 }
 
 const PropertySchema: Schema = new Schema({
@@ -36,7 +37,8 @@ const PropertySchema: Schema = new Schema({
   images: { type: [String], default: [] },
   rating: { type: Number, default: 0 },
   checkInDate: { type: Date },
-  checkOutDate: { type: Date }
+  checkOutDate: { type: Date },
+  isOffer: { type: Boolean, default: false }
 }, { timestamps: true })
 
 export default mongoose.model<IProperty>('Property', PropertySchema)

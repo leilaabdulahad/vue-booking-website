@@ -17,9 +17,10 @@ interface Property {
   beds: number
   amenities: string[]
   images: string[]
-  isFavorite?: boolean 
   rating: number
+  isFavorite?: boolean 
   checkInDate?: string
   checkOutDate?: string
+  isOffer?: boolean
 }
 
