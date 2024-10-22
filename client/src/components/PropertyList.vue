@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
-import axios from 'axios'
 import debounce from 'lodash/debounce'
 import { useRoute, useRouter } from 'vue-router'
 import FilterControls from './FiltersControl.vue'
-import FavoritesManager from './FavoriteManager.vue'
 import { fetchProperties } from '../services/propertyService'
+import PropertyCard from './PropertyCard.vue'
+import OffersCarousel from './OffersCarousel.vue'
 //state
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -139,6 +139,17 @@ onMounted(async () => {
       :initialGuestCount="guestCount"
       @filterUpdated="handleFilters" 
     />
+
+    <OffersCarousel
+      :properties="properties"
+      :currentImageIndexes="currentImageIndexes"
+      :imageLoadErrors="imageLoadErrors"
+      :checkInDate="checkInDate"
+      :checkOutDate="checkOutDate"
+      @imageError="handleImageError"
+      @prevImage="prevImage"
+      @nextImage="nextImage"
+    />
     
     <h1 class="property-title">Populära destinationer</h1>
     
@@ -150,45 +161,18 @@ onMounted(async () => {
       tag="div" 
       class="property-grid"
     >
-      <div 
-        v-for="property in filteredProperties" 
-        :key="property._id" 
-        class="property-card"
-      >
-        <div class="property-image-container">
-          <img 
-            :src="getCurrentImage(property)" 
-            @error="handleImageError(property._id)"
-            alt="Property Image"
-            class="property-image"
-          />
-          <div class="favorite-button-overlay">
-            <FavoritesManager :propertyId="property._id" />
-          </div>
-          <button class="carousel-button prev" @click.prevent="prevImage(property._id)">‹</button>
-          <button class="carousel-button next" @click.prevent="nextImage(property._id)">›</button>
-        </div>
-        <router-link 
-          :to="{
-            name: 'PropertyDetail',
-            params: { id: property._id },
-            query: { checkIn: checkInDate, checkOut: checkOutDate }
-          }"
-          class="property-link"
-        >
-          <div class="property-info">
-            <div class="title-rating-container">
-              <h3 class="property-title">{{ property.title }}</h3>
-              <div class="rating">
-                <i class="fas fa-star"></i>
-                {{ property.rating.toFixed(1) }}
-              </div>
-            </div>
-            <p class="property-details">{{ property.rooms }} rum · {{ property.beds }} sängar</p>
-            <span class="price">{{ property.pricePerNight }} kr per natt</span>
-          </div>
-        </router-link>
-      </div>
+      <PropertyCard
+        v-for="property in filteredProperties"
+        :key="property._id"
+        :property="property"
+        :currentImageIndex="currentImageIndexes[property._id]"
+        :hasImageLoadError="imageLoadErrors[property._id]"
+        :checkInDate="checkInDate"
+        :checkOutDate="checkOutDate"
+        @imageError="handleImageError"
+        @prevImage="prevImage"
+        @nextImage="nextImage"
+      />
     </TransitionGroup>
   </div>
 </template>
@@ -222,133 +206,6 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 30px;
-}
-
-.property-card {
-  background-color: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.property-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.property-image-container {
-  position: relative;
-  width: 100%;
-  height: 200px;
-  overflow: hidden;
-}
-
-.property-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.property-card:hover {
-  transform: scale(1.05);
-}
-
-.favorite-button-overlay {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 10;
-}
-
-.carousel-button {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: rgba(255, 255, 255, 0.7);
-  border: none;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  font-size: 20px;
-  color: #333;
-}
-
-.carousel-button:hover {
-  background-color: rgba(255, 255, 255, 0.9);
-}
-
-.carousel-button.prev {
-  left: 10px;
-}
-
-.carousel-button.next {
-  right: 10px;
-}
-
-.property-link {
-  text-decoration: none;
-  color: inherit;
-}
-
-.property-info {
-  padding: 15px;
-}
-
-.title-rating-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.property-title {
-  margin: 0;
-  font-size: 18px;
-  color: #333;
-}
-
-.rating {
-  display: flex;
-  align-items: center;
-  font-size: 14px;
-}
-
-.rating i {
-  margin-right: 4px;
-}
-
-.property-details {
-  margin: 0 0 10px;
-  font-size: 14px;
-  color: #666;
-}
-
-.price {
-  display: block;
-  font-weight: bold;
-  font-size: 16px;
-}
-
-/* Transitions */
-.property-list-enter-active,
-.property-list-leave-active {
-  transition: all 0.5s ease;
-}
-
-.property-list-enter-from,
-.property-list-leave-to {
-  opacity: 0;
-  transform: translateY(30px);
-}
-
-.property-list-move {
-  transition: transform 0.5s ease;
 }
 
 @media (max-width: 768px) {
