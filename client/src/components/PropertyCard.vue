@@ -2,56 +2,31 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import FavoritesManager from './FavoriteManager.vue'
+import ImageCarousel from './ImageCarousel.vue'
 
 interface Props {
   property: Property
-  currentImageIndex: number
-  hasImageLoadError: boolean
   checkInDate: string | null
   checkOutDate: string | null
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits<{
-  (e: 'imageError', propertyId: string): void
-  (e: 'prevImage', propertyId: string): void
-  (e: 'nextImage', propertyId: string): void
-}>()
-
 const router = useRouter()
-
-const currentImage = computed((): string => {
-  if (!props.property.images || 
-      props.property.images.length === 0 || 
-      props.hasImageLoadError) {
-    return '/path/to/placeholder-image.jpg'
-  }
-  return props.property.images[props.currentImageIndex]
-})
 </script>
 
 <template>
   <div class="property-card">
-    <div class="property-image-container">
-      <img 
-        :src="currentImage" 
-        @error="emit('imageError', property._id)"
-        alt="Property Image"
-        class="property-image"
-      />
+    <div class="carousel-wrapper">
+      <ImageCarousel 
+        :images="property.images" 
+        variant="card"
+        />
       <div class="favorite-button-overlay">
         <FavoritesManager :propertyId="property._id" />
       </div>
-      <button 
-        class="carousel-button prev" 
-        @click.prevent="emit('prevImage', property._id)"
-      >‹</button>
-      <button 
-        class="carousel-button next" 
-        @click.prevent="emit('nextImage', property._id)"
-      >›</button>
     </div>
-    <router-link 
+
+    <router-link
       :to="{
         name: 'PropertyDetail',
         params: { id: property._id },
@@ -87,18 +62,9 @@ const currentImage = computed((): string => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.property-image-container {
+.carousel-wrapper {
   position: relative;
   width: 100%;
-  height: 200px;
-  overflow: hidden;
-}
-
-.property-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
 }
 
 .favorite-button-overlay {
@@ -106,36 +72,6 @@ const currentImage = computed((): string => {
   top: 10px;
   right: 10px;
   z-index: 10;
-}
-
-.carousel-button {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: rgba(255, 255, 255, 0.7);
-  border: none;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  font-size: 20px;
-  color: #333;
-}
-
-.carousel-button:hover {
-  background-color: rgba(255, 255, 255, 0.9);
-}
-
-.carousel-button.prev {
-  left: 10px;
-}
-
-.carousel-button.next {
-  right: 10px;
 }
 
 .property-link {
