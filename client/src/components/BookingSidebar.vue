@@ -117,6 +117,10 @@ const isDateRangeSelected = computed(() => checkInDate.value && checkOutDate.val
 
 <style scoped>
 
+.booking-sidebar {
+  margin-top: 20px;
+}
+
 .price-row.small {
   font-size: 12px;
   margin-bottom: 8px;

@@ -43,7 +43,7 @@ onMounted(fetchProperty)
         :rating="property.rating" 
       />
       
-      <ImageCarousel :images="property.images" />
+      <ImageCarousel :images="property.images" variant="detail" />
 
       <div class="content-wrapper">
         <div class="main-content">

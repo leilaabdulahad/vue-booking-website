@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-const props = defineProps<{
+interface Props {
   images: string[]
-}>()
+  variant?: 'card' | 'detail'
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  variant: 'card'
+})
 
 const currentImageIndex = ref(0)
 
@@ -17,29 +22,38 @@ const prevImage = () => {
 </script>
 
 <template>
-  <div v-if="images?.length" class="image-carousel">
-    <div class="carousel-container">
-      <img 
-        :src="images[currentImageIndex]" 
-        :alt="`Property image ${currentImageIndex + 1}`"
-        class="carousel-image" 
-      />
-      <button 
-        class="carousel-arrow left" 
-        @click="prevImage"
-        v-if="images.length > 1"
-      >
-        <span class="arrow-icon">‹</span>
-      </button>
-      <button 
-        class="carousel-arrow right" 
-        @click="nextImage"
-        v-if="images.length > 1"
-      >
-        <span class="arrow-icon">›</span>
-      </button>
-      <div class="carousel-indicator">
-        {{ currentImageIndex + 1 }} / {{ images.length }}
+  <div
+    v-if="images?.length"
+    class="image-carousel"
+    :class="variant"
+  >
+    <div class="carousel-wrapper">
+      <div class="carousel-container">
+        <img
+          :src="images[currentImageIndex]"
+          :alt="`Property image ${currentImageIndex + 1}`"
+          class="carousel-image"
+          loading="lazy"
+        />
+        <div class="carousel-controls">
+          <button
+            v-if="images.length > 1"
+            class="carousel-button prev"
+            @click.prevent="prevImage"
+            aria-label="Previous image"
+          >
+            <span class="arrow-icon">‹</span>
+          </button>
+          <button
+            v-if="images.length > 1"
+            class="carousel-button next"
+            @click.prevent="nextImage"
+            aria-label="Next image"
+          >
+            <span class="arrow-icon">›</span>
+          </button>
+        </div>
+        
       </div>
     </div>
   </div>
@@ -47,85 +61,162 @@ const prevImage = () => {
 
 <style scoped>
 .image-carousel {
-  margin-bottom: 48px;
+  width: 100%;
+  position: relative;
+}
+
+.carousel-wrapper {
+  position: relative;
+  width: 100%;
 }
 
 .carousel-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 16/9;
-  border-radius: 12px;
+  height: 100%;
   overflow: hidden;
+  background-color: #f5f5f5;
 }
-
 
 .carousel-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
   transition: transform 0.3s ease;
 }
 
-.carousel-arrow {
+/* Card variant */
+.card .carousel-wrapper {
+  height: 200px;
+}
+
+.card .carousel-container {
+  border-radius: 8px;
+}
+
+/* Detail variant */
+.detail {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.detail .carousel-wrapper {
+  position: relative;
+  padding-top: 56.25%; 
+}
+
+.detail .carousel-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+}
+
+.carousel-controls {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.carousel-button {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: white;
+  background-color: rgba(255, 255, 255, 0.8);
   border: none;
-  width: 32px;
-  height: 32px;
   border-radius: 50%;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.18);
-  transition: opacity 0.2s ease;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  pointer-events: auto;
   z-index: 2;
 }
 
-.carousel-arrow:hover {
-  opacity: 0.9;
+.carousel-button:hover {
+  background-color: rgba(255, 255, 255, 0.95);
+  transform: translateY(-50%) scale(1.05);
 }
 
-.carousel-arrow.left {
-  left: 24px;
+.carousel-button:active {
+  transform: translateY(-50%) scale(0.95);
 }
 
-.carousel-arrow.right {
-  right: 24px;
+.card .carousel-button {
+  width: 32px;
+  height: 32px;
+}
+
+.detail .carousel-button {
+  width: 40px;
+  height: 40px;
+}
+
+.carousel-button.prev {
+  left: 16px;
+}
+
+.carousel-button.next {
+  right: 16px;
 }
 
 .arrow-icon {
   font-size: 24px;
   line-height: 1;
   color: #222222;
+  user-select: none;
 }
 
-.carousel-indicator {
+.detail .arrow-icon {
+  font-size: 28px;
+}
+
+.image-counter {
   position: absolute;
-  bottom: 24px;
-  right: 24px;
+  bottom: 16px;
+  right: 16px;
   background: rgba(0, 0, 0, 0.75);
   color: white;
-  padding: 6px 12px;
+  padding: 4px 8px;
   border-radius: 12px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
+  z-index: 2;
+}
+
+.detail .image-counter {
+  padding: 6px 12px;
+  font-size: 14px;
 }
 
 @media (max-width: 744px) {
-  .carousel-arrow {
+  .carousel-button {
     width: 28px;
     height: 28px;
   }
 
-  .carousel-arrow.left {
-    left: 16px;
+  .carousel-button.prev {
+    left: 8px;
   }
 
-  .carousel-arrow.right {
-    right: 16px;
+  .carousel-button.next {
+    right: 8px;
+  }
+
+  .arrow-icon {
+    font-size: 20px;
+  }
+
+  .image-counter {
+    bottom: 8px;
+    right: 8px;
   }
 }
 </style>
