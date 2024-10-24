@@ -2,13 +2,10 @@
 import { ref, onMounted } from 'vue'
 import { useFilteringLogic } from '../composables/useFilteringLogic'
 import FilterControls from './FiltersControl.vue'
-import { fetchProperties } from '../services/propertyService'
 import PropertyCard from './PropertyCard.vue'
 import OffersCarousel from './OffersCarousel.vue'
 import { useProperties } from '../composables/useProperties'
-
-const currentImageIndexes = ref<{ [key: string]: number }>({})
-const imageLoadErrors = ref<{ [key: string]: boolean }>({})
+import { useImageCarousel } from '../composables/useImageCarousel'
 
 const {
   loading,
@@ -17,7 +14,16 @@ const {
   loadProperties
 } = useProperties()
 
-// using the filteringLogic composable
+const {
+  currentImageIndexes,
+  imageLoadErrors,
+  initializeImageIndexes,
+  handleImageError,
+  nextImage,
+  prevImage
+
+} = useImageCarousel(properties)
+
 const {
   searchQuery,
   checkInDate,
@@ -27,34 +33,6 @@ const {
   handleFilters,
   initializeFromRoute
 } = useFilteringLogic(properties)
-
-
-const getCurrentImage = (property: Property): string => {
-  if (!property.images || property.images.length === 0 || imageLoadErrors.value[property._id]) {
-    return '/path/to/placeholder-image.jpg'
-  }
-  return property.images[currentImageIndexes.value[property._id]]
-}
-
-const handleImageError = (propertyId: string) => {
-  imageLoadErrors.value[propertyId] = true
-}
-
-const nextImage = (propertyId: string) => {
-  const property = properties.value.find(p => p._id === propertyId)
-  if (property) {
-    const totalImages = property.images.length
-    currentImageIndexes.value[propertyId] = (currentImageIndexes.value[propertyId] + 1) % totalImages
-  }
-}
-
-const prevImage = (propertyId: string) => {
-  const property = properties.value.find(p => p._id === propertyId)
-  if (property) {
-    const totalImages = property.images.length
-    currentImageIndexes.value[propertyId] = (currentImageIndexes.value[propertyId] - 1 + totalImages) % totalImages
-  }
-}
 
 onMounted(async () => {
   await loadProperties()
