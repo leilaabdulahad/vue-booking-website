@@ -13,7 +13,7 @@
   <nav class="navbar">
     <div class="navbar-container">
       <router-link to="/" class="navbar-brand">
-        Property App
+        EurBnB
       </router-link>
       <button
         class="navbar-burger"
@@ -70,7 +70,7 @@
   .navbar-brand {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #333;
+    color: #FC4646;
     text-decoration: none;
     transition: color 0.3s ease;
   }
