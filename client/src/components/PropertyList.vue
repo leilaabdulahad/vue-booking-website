@@ -5,12 +5,17 @@ import FilterControls from './FiltersControl.vue'
 import { fetchProperties } from '../services/propertyService'
 import PropertyCard from './PropertyCard.vue'
 import OffersCarousel from './OffersCarousel.vue'
+import { useProperties } from '../composables/useProperties'
 
-const loading = ref(false)
-const error = ref<string | null>(null)
-const properties = ref<Property[]>([])
 const currentImageIndexes = ref<{ [key: string]: number }>({})
 const imageLoadErrors = ref<{ [key: string]: boolean }>({})
+
+const {
+  loading,
+  error,
+  properties,
+  loadProperties
+} = useProperties()
 
 // using the filteringLogic composable
 const {
@@ -23,28 +28,6 @@ const {
   initializeFromRoute
 } = useFilteringLogic(properties)
 
-// loading properties
-const loadProperties = async () => {
-  loading.value = true
-  error.value = null
-  try {
-    const data = await fetchProperties()
-    properties.value = data
-    properties.value.forEach(property => {
-      currentImageIndexes.value[property._id] = 0
-      imageLoadErrors.value[property._id] = false
-    })
-  } catch (err) {
-    if (err instanceof Error) {
-      error.value = err.message
-    } else {
-      error.value = 'An unknown error occurred while loading properties.'
-    }
-    properties.value = []
-  } finally {
-    loading.value = false
-  }
-}
 
 const getCurrentImage = (property: Property): string => {
   if (!property.images || property.images.length === 0 || imageLoadErrors.value[property._id]) {
