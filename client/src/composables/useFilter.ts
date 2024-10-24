@@ -1,7 +1,7 @@
 import { ref, watch } from 'vue'
 import type { FilterUpdateEvent } from '@/types/filter'
 
-export function useFilter(emit: FilterUpdateEvent) {
+export const useFilter = (emit: FilterUpdateEvent) => {
   const searchQuery = ref('')
   const checkInDate = ref<string | null>(null)
   const checkOutDate = ref<string | null>(null)
