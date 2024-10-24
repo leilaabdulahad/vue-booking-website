@@ -1,27 +1,29 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
-import debounce from 'lodash/debounce'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useFilteringLogic } from '../composables/useFilteringLogic'
 import FilterControls from './FiltersControl.vue'
 import { fetchProperties } from '../services/propertyService'
 import PropertyCard from './PropertyCard.vue'
 import OffersCarousel from './OffersCarousel.vue'
-//state
+
 const loading = ref(false)
 const error = ref<string | null>(null)
 const properties = ref<Property[]>([])
-const searchQuery = ref('')
-const debouncedSearchQuery = ref('')
-const guestCount = ref(1)
-const checkInDate = ref<string | null>(null)
-const checkOutDate = ref<string | null>(null)
 const currentImageIndexes = ref<{ [key: string]: number }>({})
 const imageLoadErrors = ref<{ [key: string]: boolean }>({})
 
-const route = useRoute()
-const router = useRouter()
+// using the filteringLogic composable
+const {
+  searchQuery,
+  checkInDate,
+  checkOutDate,
+  guestCount,
+  filteredProperties,
+  handleFilters,
+  initializeFromRoute
+} = useFilteringLogic(properties)
 
-//fecthing properties using propertyService
+// loading properties
 const loadProperties = async () => {
   loading.value = true
   error.value = null
@@ -44,11 +46,9 @@ const loadProperties = async () => {
   }
 }
 
-
-//image handling
 const getCurrentImage = (property: Property): string => {
   if (!property.images || property.images.length === 0 || imageLoadErrors.value[property._id]) {
-    return '/path/to/placeholder-image.jpg' 
+    return '/path/to/placeholder-image.jpg'
   }
   return property.images[currentImageIndexes.value[property._id]]
 }
@@ -73,60 +73,9 @@ const prevImage = (propertyId: string) => {
   }
 }
 
-//filtering
-const updateDebouncedSearchQuery = debounce((value: string) => {
-  debouncedSearchQuery.value = value
-}, 300)
-
-watch(searchQuery, (newValue) => {
-  updateDebouncedSearchQuery(newValue)
-})
-
-const filteredProperties = computed(() => {
-  return properties.value.filter(property => {
-    const matchesSearch = !debouncedSearchQuery.value || 
-      property.location.country.toLowerCase().includes(debouncedSearchQuery.value.toLowerCase()) ||
-      property.location.city.toLowerCase().includes(debouncedSearchQuery.value.toLowerCase())
-    const matchesGuests = property.maxGuests >= guestCount.value
-    return matchesSearch && matchesGuests
-  })
-})
-
-//handle filters update
-const handleFilters = (filters: {
-  searchQuery: string,
-  checkInDate: string | null,
-  checkOutDate: string | null,
-  guestCount: number
-}) => {
-  searchQuery.value = filters.searchQuery
-  checkInDate.value = filters.checkInDate
-  checkOutDate.value = filters.checkOutDate
-  guestCount.value = filters.guestCount
-}
-
-//URL syncing
-watch([checkInDate, checkOutDate, debouncedSearchQuery, guestCount], () => {
-  nextTick(() => {
-    router.replace({
-      query: {
-        ...route.query,
-        checkIn: checkInDate.value,
-        checkOut: checkOutDate.value,
-        search: debouncedSearchQuery.value,
-        guests: guestCount.value?.toString()
-      }
-    })
-  })
-})
-
-//initialization
 onMounted(async () => {
   await loadProperties()
-  searchQuery.value = route.query.search as string || ''
-  checkInDate.value = route.query.checkIn as string || null
-  checkOutDate.value = route.query.checkOut as string || null
-  guestCount.value = Number(route.query.guests) || 1
+  initializeFromRoute()
 })
 </script>
 
