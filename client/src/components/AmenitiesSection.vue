@@ -11,7 +11,7 @@ defineProps<{
       <div v-for="amenity in amenities" 
            :key="amenity" 
            class="amenity-item">
-        <span class="amenity-icon">✓</span>
+        <!-- <span class="amenity-icon">✓</span> -->
         {{ amenity }}
       </div>
     </div>
