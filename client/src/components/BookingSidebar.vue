@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BookProperty from './BookProperty.vue'
 import { usePropertyPricing } from '@/composables/usePropertyPricing'
@@ -17,25 +17,36 @@ const initialCheckInDate = ref<string | null>(route.query.checkIn as string || n
 const initialCheckOutDate = ref<string | null>(route.query.checkOut as string || null)
 
 const {
-  numberOfNights,
-  basePrice,
-  totalPrice,
-  formatPrice
-} = usePropertyPricing({
-  checkInDate: initialCheckInDate,
-  checkOutDate: initialCheckOutDate,
-  pricePerNight: props.property.pricePerNight
-})
-
-const {
   bookingCheckInDate,
   bookingCheckOutDate,
   updateDates
 } = useBookingDates(props.propertyId)
 
+// using computed values for pricing calculations to ensure reactivity
+const currentCheckInDate = computed(() => bookingCheckInDate.value)
+const currentCheckOutDate = computed(() => bookingCheckOutDate.value)
+
+const {
+  numberOfNights,
+  basePrice,
+  totalPrice,
+  formatPrice
+} = usePropertyPricing({
+  checkInDate: currentCheckInDate,
+  checkOutDate: currentCheckOutDate,
+  pricePerNight: props.property.pricePerNight
+})
+
 const isDateRangeSelected = computed(() => bookingCheckInDate.value && bookingCheckOutDate.value)
 
-// booking page navigation
+// watching for date changes and update pricing
+watch([bookingCheckInDate, bookingCheckOutDate], ([newCheckIn, newCheckOut], [oldCheckIn, oldCheckOut]) => {
+  if (newCheckIn !== oldCheckIn || newCheckOut !== oldCheckOut) {
+    // pricing will automatically update due to the computed dependencies
+    console.log('Dates updated:', newCheckIn, newCheckOut)
+  }
+})
+
 const redirectToBookingPage = () => {
   if (bookingCheckInDate.value && bookingCheckOutDate.value) {
     router.push({
@@ -56,13 +67,12 @@ const redirectToBookingPage = () => {
   <div class="booking-sidebar">
     <div class="booking-card">
       <div class="booking-form">
-        <BookProperty 
-          :propertyId="propertyId" 
-          :checkIn="bookingCheckInDate" 
+        <BookProperty
+          :propertyId="propertyId"
+          :checkIn="bookingCheckInDate"
           :checkOut="bookingCheckOutDate"
           @dateChange="updateDates"
         />
-
         <div v-if="isDateRangeSelected">
           <div class="price-details">
             <div class="price-row">
@@ -72,18 +82,17 @@ const redirectToBookingPage = () => {
               <span class="price">{{ formatPrice(props.property.pricePerNight) }}</span>
               <span class="price-period"> kr/natt</span>
             </div>
-
             <div class="price-total">
               <strong>Totalt</strong>
               <strong>{{ formatPrice(totalPrice) }}</strong>
             </div>
             <div class="fees-included-note">inklusive avigifter</div>
           </div>
-
-          <button 
-            @click="redirectToBookingPage" 
+          <button
+            @click="redirectToBookingPage"
             class="reserve-btn"
-            :disabled="!isDateRangeSelected">
+            :disabled="!isDateRangeSelected"
+          >
             Reservera
           </button>
         </div>
@@ -91,7 +100,6 @@ const redirectToBookingPage = () => {
     </div>
   </div>
 </template>
-
 <style scoped>
 .booking-sidebar {
   margin-top: 20px;
