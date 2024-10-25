@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
 import Datepicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
-import { useUnavailableDates } from '../composables/useUnavailableDates'
-import { useDateRange } from '../composables/useDateRange'
+import { useDatePickerState } from '../composables/useDatePickerState'
+import { useDisabledDates } from '../composables/useDisabledDates'
 
 const props = defineProps<{
   propertyId: string
@@ -11,45 +10,13 @@ const props = defineProps<{
   checkOut: string | Date | null
 }>()
 
-const emit = defineEmits(['dateChange'])
-
-const { unavailableDates, isLoading: isLoadingDates, isDateUnavailable, loadUnavailableDates } = useUnavailableDates(props.propertyId)
-const { startDate, endDate, minDate, updateDates } = useDateRange(props.checkIn, props.checkOut)
-
-const getDatesBetween = (startDate: Date, endDate: Date): Date[] => {
-  const dates: Date[] = []
-  let currentDate = new Date(startDate)
-  while (currentDate <= endDate) {
-    dates.push(new Date(currentDate))
-    currentDate.setDate(currentDate.getDate() + 1)
-  }
-  return dates
-}
-
-const disabledDates = computed(() => {
-  return unavailableDates.value.flatMap((booking: Booking) =>
-    getDatesBetween(new Date(booking.startDate), new Date(booking.endDate))
-  )
+const { startDate, endDate, minDate } = useDatePickerState({
+  propertyId: props.propertyId,
+  initialCheckIn: props.checkIn,
+  initialCheckOut: props.checkOut
 })
 
-const isDateObject = (value: unknown): value is Date => {
-  return Object.prototype.toString.call(value) === '[object Date]' && !isNaN((value as Date).getTime())
-}
-
-const handleDateChange = () => {
-  if (startDate.value && endDate.value) {
-    const startDateStr = isDateObject(startDate.value) ? startDate.value.toISOString() : startDate.value;
-    const endDateStr = isDateObject(endDate.value) ? endDate.value.toISOString() : endDate.value;
-    emit('dateChange', startDateStr, endDateStr);
-  }
-}
-
-
-watch([startDate, endDate], ([newStartDate, newEndDate], [oldStartDate, oldEndDate]) => {
-  if (newStartDate && newEndDate && (newStartDate !== oldStartDate || newEndDate !== oldEndDate)) {
-    handleDateChange()
-  }
-})
+const { disabledDates, isLoadingDates } = useDisabledDates(props.propertyId)
 </script>
 
 <template>
@@ -61,6 +28,7 @@ watch([startDate, endDate], ([newStartDate, newEndDate], [oldStartDate, oldEndDa
         v-model="startDate"
         :min-date="minDate"
         :disabled-dates="disabledDates"
+        :loading="isLoadingDates"
         auto-apply
         required
       />
@@ -71,15 +39,10 @@ watch([startDate, endDate], ([newStartDate, newEndDate], [oldStartDate, oldEndDa
         v-model="endDate"
         :min-date="startDate || minDate"
         :disabled-dates="disabledDates"
+        :loading="isLoadingDates"
         auto-apply
         required
       />
     </div>
   </div>
 </template>
-
-<style scoped>
-.book-title{
-  text-align: center;
-}
-</style>
