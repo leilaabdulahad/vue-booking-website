@@ -9,13 +9,37 @@ export const useBooking = (propertyId: string, userId: string) => {
   const isLoading = ref(false)
 
   //function to handle booking a property
-  const handleBookProperty = async (startDate: string, endDate: string) => {
+  const handleBookProperty = async (
+    startDate: string, 
+    endDate: string,
+    numberOfNights: number,
+    firstName: string,
+    lastName: string,
+    address: string,
+    postalCode: string,
+    city: string,
+    email: string,
+    phoneNumber: string
+    ) => {
     isLoading.value = true
     error.value = ''
     success.value = ''
 
     try {
-      await bookProperty(propertyId, startDate, endDate, userId)
+      await bookProperty (
+        propertyId, 
+        startDate, 
+        endDate, 
+        userId,
+        numberOfNights,
+        firstName,
+        lastName,
+        address,
+        postalCode,
+        city,
+        email,
+        phoneNumber
+        )
       success.value = 'Booking successful!'
     } catch (err) {
       //handle errors from booking service
