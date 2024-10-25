@@ -2,7 +2,8 @@
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BookProperty from './BookProperty.vue'
-import { updatePropertyDates } from '../services/propertyService'
+import { usePropertyPricing } from '@/composables/usePropertyPricing'
+import { useBookingDates } from '@/composables/useBookingDates'
 
 const props = defineProps<{
   property: Property
@@ -12,67 +13,43 @@ const props = defineProps<{
 const route = useRoute()
 const router = useRouter()
 
-const checkInDate = ref<string | null>(route.query.checkIn as string || null)
-const checkOutDate = ref<string | null>(route.query.checkOut as string || null)
+const initialCheckInDate = ref<string | null>(route.query.checkIn as string || null)
+const initialCheckOutDate = ref<string | null>(route.query.checkOut as string || null)
 
-//calculations
-const numberOfNights = computed(() => {
-  if (!checkInDate.value || !checkOutDate.value) return 0
-  
-  const start = new Date(checkInDate.value)
-  const end = new Date(checkOutDate.value)
-  const diffTime = Math.abs(end.getTime() - start.getTime())
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+const {
+  numberOfNights,
+  basePrice,
+  totalPrice,
+  formatPrice
+} = usePropertyPricing({
+  checkInDate: initialCheckInDate,
+  checkOutDate: initialCheckOutDate,
+  pricePerNight: props.property.pricePerNight
 })
 
-const basePrice = computed(() => props.property.pricePerNight)
-const stayDiscount = computed(() => numberOfNights.value > 7 ? 0.1 : 0)
-const totalPrice = computed(() => {
-  if (numberOfNights.value === 0) return 0
-  return (numberOfNights.value * basePrice.value * (1 - stayDiscount.value)) + 350 + 500
-})
+const {
+  bookingCheckInDate,
+  bookingCheckOutDate,
+  updateDates
+} = useBookingDates(props.propertyId)
 
-const formatPrice = (amount: number) => {
-  return new Intl.NumberFormat('sv-SE', {
-    style: 'currency',
-    currency: 'SEK',
-    maximumFractionDigits: 0
-  }).format(amount).replace('SEK', 'kr')
-}
+const isDateRangeSelected = computed(() => bookingCheckInDate.value && bookingCheckOutDate.value)
 
-const updateDates = async (newCheckIn: string, newCheckOut: string) => {
-  checkInDate.value = newCheckIn
-  checkOutDate.value = newCheckOut
-  try {
-    await updatePropertyDates(props.propertyId, newCheckIn, newCheckOut)
-    router.replace({
-      query: {
-        ...route.query,
-        checkIn: newCheckIn,
-        checkOut: newCheckOut
-      }
-    })
-  } catch (err) {
-    console.error('Error updating property dates:', err)
-  }
-}
-
+// booking page navigation
 const redirectToBookingPage = () => {
-  if (checkInDate.value && checkOutDate.value) {
+  if (bookingCheckInDate.value && bookingCheckOutDate.value) {
     router.push({
       name: 'BookingPage',
       query: {
         propertyId: props.propertyId,
-        checkIn: checkInDate.value,
-        checkOut: checkOutDate.value
+        checkIn: bookingCheckInDate.value,
+        checkOut: bookingCheckOutDate.value
       }
     })
   } else {
     alert('Please select check-in and check-out dates before proceeding')
   }
 }
-
-const isDateRangeSelected = computed(() => checkInDate.value && checkOutDate.value)
 </script>
 
 <template>
@@ -81,8 +58,8 @@ const isDateRangeSelected = computed(() => checkInDate.value && checkOutDate.val
       <div class="booking-form">
         <BookProperty 
           :propertyId="propertyId" 
-          :checkIn="checkInDate" 
-          :checkOut="checkOutDate"
+          :checkIn="bookingCheckInDate" 
+          :checkOut="bookingCheckOutDate"
           @dateChange="updateDates"
         />
 
@@ -92,7 +69,7 @@ const isDateRangeSelected = computed(() => checkInDate.value && checkOutDate.val
               <span>{{ numberOfNights }} nätter</span>
             </div>
             <div class="price-header">
-              <span class="price">{{ formatPrice(property.pricePerNight) }}</span>
+              <span class="price">{{ formatPrice(props.property.pricePerNight) }}</span>
               <span class="price-period"> kr/natt</span>
             </div>
 
@@ -116,20 +93,16 @@ const isDateRangeSelected = computed(() => checkInDate.value && checkOutDate.val
 </template>
 
 <style scoped>
-
 .booking-sidebar {
   margin-top: 20px;
 }
-
 .price-row.small {
   font-size: 12px;
   margin-bottom: 8px;
 }
-
 .price-total {
   font-size: 18px;
 }
-
 .booking-card {
   position: sticky;
   top: 80px;
@@ -139,22 +112,17 @@ const isDateRangeSelected = computed(() => checkInDate.value && checkOutDate.val
   box-shadow: 0 6px 16px rgba(0,0,0,0.12);
   background: white;
 }
-
 .price-header {
   margin-bottom: 24px;
 }
- .price {
-  /* font-size: 22px;
-  font-weight: 600; */
+.price {
   font-size: 16px;
   color: #717171;
 } 
-
 .price-period {
   font-size: 16px;
   color: #717171;
 }
-
 .reserve-btn {
   width: 100%;
   background: #1E3E62;
@@ -167,25 +135,21 @@ const isDateRangeSelected = computed(() => checkInDate.value && checkOutDate.val
   margin-top: 16px;
   cursor: pointer;
 }
-
 .reserve-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
-
 .price-details {
   margin-top: 24px;
   border-top: 1px solid #DDDDDD;
   padding-top: 24px;
 }
-
 .price-row {
   display: flex;
   justify-content: space-between;
   margin-bottom: 16px;
   color: #717171;
 }
-
 .price-total {
   display: flex;
   justify-content: space-between;
@@ -195,7 +159,6 @@ const isDateRangeSelected = computed(() => checkInDate.value && checkOutDate.val
   font-size: 16px;
   color: #222222;
 }
-
 @media (max-width: 1000px) {
   .booking-card {
     position: static;
