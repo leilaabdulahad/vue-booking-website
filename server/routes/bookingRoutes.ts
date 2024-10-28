@@ -22,13 +22,13 @@ router.post('/', async (req: express.Request, res: express.Response) => {
       numberOfNights
     } = req.body    
 
-    //checking if the property exists
+    // checking if the property exists
     const property = await Property.findById(propertyId)
     if (!property) {
       return res.status(404).json({ message: 'Property not found' })
     }
 
-    //checking for overlapping bookings
+    // checking for overlapping bookings
     const overlappingBooking = await Booking.findOne({
       propertyId,
       $or: [
@@ -39,7 +39,7 @@ router.post('/', async (req: express.Request, res: express.Response) => {
       return res.status(400).json({ message: 'The property is already booked for the selected dates.' })
     }
 
-    //fetching username from Clerk
+    // fetching username from Clerk
     let username = 'Unknown'
     if (clerkUserId) {
       try {
@@ -84,7 +84,7 @@ router.post('/', async (req: express.Request, res: express.Response) => {
   }
 })
 
-//checking unavailable dates
+// checking unavailable dates
 router.get('/unavailable/:propertyId', async (req: express.Request, res: express.Response) => {
   try {
     const bookings = await Booking.find({
@@ -96,5 +96,19 @@ router.get('/unavailable/:propertyId', async (req: express.Request, res: express
     res.status(500).json({ message: 'Error fetching unavailable dates', error: error.message })
   }
 })
+
+// gets bookings
+router.get('/user/:clerkUserId', async (req: express.Request, res: express.Response) => {
+  try {
+    const bookings = await Booking.find({
+      clerkUserId: req.params.clerkUserId,
+    }).populate('propertyId')
+
+    res.json(bookings);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching user bookings', error: error.message })
+  }
+})
+
 
 export default router
