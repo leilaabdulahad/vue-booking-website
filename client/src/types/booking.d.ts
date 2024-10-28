@@ -1,6 +1,6 @@
 interface Booking {
   _id: string
-  propertyId: string
+  propertyId: Property
   userId: string
   clerkUserId: string
   firstName: string

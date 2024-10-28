@@ -51,4 +51,14 @@ export const bookProperty = async (
   }
 }
 
+// fetching user bookings
+export const fetchUserBookings = async (clerkUserId: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/bookings/user/${clerkUserId}`)
+    return response.data
+  } catch (err) {
+    console.error('Error fetching user bookings:', err)
+    throw err
+  }
+}
 
