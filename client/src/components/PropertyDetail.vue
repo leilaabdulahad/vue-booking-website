@@ -68,6 +68,7 @@ onMounted(fetchProperty)
     </div>
   </div>
 </template>
+
 <style scoped>
 .detail-container {
   max-width: 1120px;
@@ -82,9 +83,7 @@ onMounted(fetchProperty)
 }
 
 .description-section {
-  padding: 32px 0;
   line-height: 1.5;
-  color: #222222;
 }
 
 

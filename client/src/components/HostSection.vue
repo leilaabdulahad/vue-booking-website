@@ -10,21 +10,12 @@ defineProps<{
   <div class="host-section">
     <div class="host-header">
       <h2>Din värd: {{ username || 'Unknown user' }}</h2>
-    </div>
-    <div class="property-highlights">
-      <div class="highlight-item">
-        <div class="highlight-text">
-          <p>{{ rooms }} rum · {{ beds }} sängar</p>
-        </div>
-      </div>
+      <p>{{ rooms }} rum · {{ beds }} sängar</p>
     </div>
   </div>
 </template>
 
 <style scoped>
-.host-section {
-  padding-bottom: 24px;
-}
 
 .host-header h2 {
   font-size: 16px;
@@ -39,7 +30,6 @@ defineProps<{
 
 .highlight-item {
   display: flex;
-  
   align-items: center;
 }
 

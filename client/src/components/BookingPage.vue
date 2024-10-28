@@ -68,7 +68,7 @@ const handleBooking = async () => {
     return
   }
 
-  // Collecting user information from the form
+  // collecting user information from the form
   const firstName = (document.querySelector('input[placeholder="Förnamn"]') as HTMLInputElement)?.value
   const lastName = (document.querySelector('input[placeholder="Efternamn"]') as HTMLInputElement)?.value
   const address = (document.querySelector('input[placeholder="Adress"]') as HTMLInputElement)?.value
@@ -277,7 +277,7 @@ h3 {
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 1.2rem;
 }
 
 input {
@@ -302,6 +302,9 @@ input {
   cursor: pointer;
   width: 100%;
   margin-top: 1.5rem;
+  max-width: 300px;
+  display: block;
+  margin: 1.5rem auto;
 }
 
 .book-now-btn:hover {
