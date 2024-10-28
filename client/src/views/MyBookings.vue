@@ -167,7 +167,6 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   border: 3px solid #e2e8f0;
-  border-top: 3px solid #3b82f6;
   border-radius: 50%;
   animation: spin 1s cubic-bezier(0.55, 0.25, 0.25, 0.7) infinite;
 }
@@ -270,7 +269,6 @@ onMounted(() => {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(to right, #3b82f6, #60a5fa);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
