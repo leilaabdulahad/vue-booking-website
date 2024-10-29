@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUser } from 'vue-clerk'
 import { fetchPropertyById } from '../services/propertyService'
 import { bookProperty } from '../services/bookingService'
+import { useBooking } from '@/composables/useBooking'
 
 const route = useRoute()
 const router = useRouter()
@@ -12,14 +13,19 @@ const { user, isLoaded } = useUser()
 const propertyId = route.query.propertyId as string
 const checkInDate = ref(route.query.checkIn as string)
 const checkOutDate = ref(route.query.checkOut as string)
-const property = ref<any>(null)
+const property = ref<Property | null>(null)
 const loading = ref(true)
-const bookingError = ref<string | null>(null)
+
+const { 
+  error, 
+  success, 
+  isLoading, 
+  handleBooking 
+  } = useBooking(propertyId, user.value?.id ?? '')
 
 const cleaningFee = 500
 const serviceFee = 350
 
-//updates the existing numberOfNights
 const numberOfNights = computed(() => {
   if (!checkInDate.value || !checkOutDate.value) return 0
   const start = new Date(checkInDate.value)
@@ -32,7 +38,6 @@ const basePrice = computed(() => {
   return property.value.pricePerNight * numberOfNights.value
 })
 
-//updates the existing totalPrice 
 const totalPrice = computed(() => {
   return basePrice.value + cleaningFee + serviceFee
 })
@@ -54,21 +59,20 @@ const formattedDateRange = computed(() => {
 const fetchProperty = async () => {
   try {
     property.value = await fetchPropertyById(propertyId)
-  } catch (error) {
-    console.error('Failed to fetch property details:', error)
-    bookingError.value = 'Failed to load property details. Please try again.'
+  } catch (err) {
+    console.error('Failed to fetch property details:', err)
+    error.value = 'Failed to load property details. Try again.'
   } finally {
     loading.value = false
   }
 }
 
-const handleBooking = async () => {
+const handleBookNow = async () => {
   if (!user.value) {
-    bookingError.value = 'Please log in to book a property'
+    error.value = 'Please log in to book a property'
     return
   }
 
-  // collecting user information from the form
   const firstName = (document.querySelector('input[placeholder="Förnamn"]') as HTMLInputElement)?.value
   const lastName = (document.querySelector('input[placeholder="Efternamn"]') as HTMLInputElement)?.value
   const address = (document.querySelector('input[placeholder="Adress"]') as HTMLInputElement)?.value
@@ -77,34 +81,27 @@ const handleBooking = async () => {
   const email = (document.querySelector('input[placeholder="Mailadress"]') as HTMLInputElement)?.value
   const phoneNumber = (document.querySelector('input[placeholder="Telefonnummer"]') as HTMLInputElement)?.value
 
-  loading.value = true
-  try {
-    const bookingResult = await bookProperty(
-      propertyId,
-      checkInDate.value,
-      checkOutDate.value,
-      user.value.id,
-      numberOfNights.value,
-      firstName,
-      lastName,
-      address,
-      postalCode,
-      city,
-      user.value.emailAddresses[0].emailAddress,
-      phoneNumber
-    )
+  const bookingResult = await handleBooking(
+    checkInDate.value,
+    checkOutDate.value,
+    firstName,
+    lastName,
+    address,
+    postalCode,
+    city,
+    email,
+    phoneNumber
+  )
+
+  if (success.value) {
     router.push({
       name: 'BookingConfirmation',
       query: { bookingId: bookingResult._id }
     })
-  } catch (error) {
-    console.error('Failed to create booking:', error)
-    bookingError.value = 'Failed to create booking. Please try again.'
-  } finally {
-    loading.value = false
+  } else if (error.value) {
+    console.error('Failed to book property:', error.value)
   }
 }
-
 
 const isButtonDisabled = computed(() => {
   return !checkInDate.value || !checkOutDate.value || loading.value
@@ -119,13 +116,13 @@ fetchProperty()
       <h1>Skicka bokningsförfrågan</h1>
     </div>
     <div v-if="loading" class="loading">Loading property details...</div>
-    <div v-else-if="bookingError" class="error">{{ bookingError }}</div>
+    <div v-if="error" class="error">{{ error }}</div>
     <div v-else-if="property" class="booking-details">
       <div class="property-card">
         <img :src="property.images[0]" :alt="property.title" class="property-image">
         <div class="property-info">
           <h2>{{ property.title }}</h2>
-          <p>{{ property.rooms }} rum · {{ property.beds }} sängar · {{ property.guests }} gäster</p>
+          <p>{{ property.rooms }} rum · {{ property.beds }} sängar · {{ property.maxGuests }} gäster</p>
           <div class="date-section">
             <p class="label">Datum</p>
             <p>{{ formattedDateRange }}</p>
@@ -174,7 +171,7 @@ fetchProperty()
         </div>
       </div>
       
-      <button @click="handleBooking" :disabled="isButtonDisabled" class="book-now-btn">
+      <button @click="handleBookNow" :disabled="isButtonDisabled" class="book-now-btn">
         {{ loading ? 'Laddar...' : 'Reservera och betala' }}
       </button>
     </div>
