@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Navbar from './components/Navbar.vue'
 import UserAuth from './components/UserAuth.vue'
+import Footer from './components/Footer.vue'
 </script>
 
 <template>
@@ -8,6 +9,7 @@ import UserAuth from './components/UserAuth.vue'
     <Navbar />
     <router-view />
     <UserAuth />
+    <Footer />
   </div>
 </template>
 
