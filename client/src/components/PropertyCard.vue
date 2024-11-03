@@ -22,7 +22,10 @@ const router = useRouter()
         variant="card"
         />
       <div class="favorite-button-overlay">
-        <FavoritesManager :propertyId="property._id" />
+        <FavoritesManager 
+          :propertyId="property._id" 
+          @favoriteToggled="$emit('favoriteToggled', property._id)" 
+          />
       </div>
     </div>
 
