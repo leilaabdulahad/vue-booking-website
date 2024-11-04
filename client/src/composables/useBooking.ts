@@ -3,16 +3,13 @@ import axios from 'axios'
 import { bookProperty } from '../services/bookingService'
 
 export const useBooking = (propertyId: string, userId: string) => {
-  //reactive references for error, success message and loading state
-  const error = ref('')
-  const success = ref('')
+  const error = ref<string | null>(null)
+  const success = ref(false)
   const isLoading = ref(false)
 
-  //function to handle booking a property
-  const handleBookProperty = async (
-    startDate: string, 
-    endDate: string,
-    numberOfNights: number,
+  const handleBooking = async (
+    checkInDate: string,
+    checkOutDate: string,
     firstName: string,
     lastName: string,
     address: string,
@@ -20,16 +17,17 @@ export const useBooking = (propertyId: string, userId: string) => {
     city: string,
     email: string,
     phoneNumber: string
-    ) => {
+  ) => {
     isLoading.value = true
-    error.value = ''
-    success.value = ''
+    error.value = null
+    success.value = false
 
     try {
-      await bookProperty (
-        propertyId, 
-        startDate, 
-        endDate, 
+      const numberOfNights = Math.round((new Date(checkOutDate).getTime() - new Date(checkInDate).getTime()) / (1000 * 60 * 60 * 24))
+      const bookingResult = await bookProperty(
+        propertyId,
+        checkInDate,
+        checkOutDate,
         userId,
         numberOfNights,
         firstName,
@@ -39,10 +37,10 @@ export const useBooking = (propertyId: string, userId: string) => {
         city,
         email,
         phoneNumber
-        )
-      success.value = 'Booking successful!'
+      )
+      success.value = true
+      return bookingResult
     } catch (err) {
-      //handle errors from booking service
       if (axios.isAxiosError(err) && err.response) {
         error.value = `Error booking property: ${err.response.data.message || err.message}`
       } else {
@@ -58,6 +56,6 @@ export const useBooking = (propertyId: string, userId: string) => {
     error,
     success,
     isLoading,
-    handleBookProperty
+    handleBooking
   }
 }
