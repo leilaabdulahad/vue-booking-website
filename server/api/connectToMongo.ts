@@ -11,23 +11,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const db = client.db('test')
-  const collectionName = req.query.collection
+  const collectionName = req.query.collection as string;
 
-
-  if (!['bookings', 'favorites', 'properties', 'users'].includes(collectionName as string)) {
-    return res.status(400).json({ error: 'Invalid collection name' });
+  if (!['bookings', 'favorites', 'properties', 'users'].includes(collectionName)) {
+    return res.status(400).json({ error: 'Invalid collection name' })
   }
 
-  const collection = db.collection(collectionName as string)
+  const collection = db.collection(collectionName)
 
   if (req.method === 'GET') {
     const data = await collection.find({}).toArray()
-    res.status(200).json(data)
+    return res.status(200).json(data)
   }
 
   if (req.method === 'POST') {
-    const newData = req.body
+    const newData = req.body;
     const result = await collection.insertOne(newData)
-    res.status(201).json(result)
+    return res.status(201).json(result)
   }
+
+  // Handle unsupported methods
+  return res.status(405).json({ error: 'Method Not Allowed' })
 }
