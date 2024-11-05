@@ -1,39 +1,35 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+
 const currentYear = ref(new Date().getFullYear())
 </script>
 
 <template>
-  <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-text">
-        <span>© {{ currentYear }} EurBNB AB</span>
-        <span>·</span>
-        <span>Integritet</span>
-        <span>·</span>
-        <span>Villkor</span>
-        <span>·</span>
-        <span>Om oss</span>
-        <span>·</span>
-        <span>Företagsuppgifter</span>
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-text">
+          <span>© {{ currentYear }} EurBNB AB</span>
+          <span>·</span>
+          <span>Integritet</span>
+          <span>·</span>
+          <span>Villkor</span>
+          <span>·</span>
+          <span>Om oss</span>
+          <span>·</span>
+          <span>Företagsuppgifter</span>
+        </div>
+        <div class="footer-icons">
+          <a href="#" aria-label="Twitter" class="footer-icon"><i class="fab fa-twitter"></i></a>
+          <a href="#" aria-label="Instagram" class="footer-icon"><i class="fab fa-instagram"></i></a>
+          <a href="#" aria-label="Facebook" class="footer-icon"><i class="fab fa-facebook-f"></i></a>
+        </div>
       </div>
-      <div class="footer-icons">
-        <a href="#" aria-label="Twitter" class="footer-icon"><i class="fab fa-twitter"></i></a>
-        <a href="#" aria-label="Instagram" class="footer-icon"><i class="fab fa-instagram"></i></a>
-        <a href="#" aria-label="Facebook" class="footer-icon"><i class="fab fa-facebook-f"></i></a>
-      </div>
-    </div>
-  </footer>
+    </footer>
 </template>
-
-
 
 <style scoped>
 .footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  width: 100%;
   display: flex;
   text-align: center;
   justify-content: center;
@@ -42,7 +38,6 @@ const currentYear = ref(new Date().getFullYear())
   color: #555;
   font-size: 14px;
   padding: 20px 0;
-  z-index: 100; 
 }
 
 .footer-content {
@@ -50,7 +45,9 @@ const currentYear = ref(new Date().getFullYear())
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin: 10px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
 .footer-text {
@@ -73,5 +70,17 @@ const currentYear = ref(new Date().getFullYear())
 
 .footer-icon:hover {
   color: #000;
+}
+
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .footer-text {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
 </style>
