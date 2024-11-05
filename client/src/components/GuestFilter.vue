@@ -66,7 +66,7 @@ if (typeof window !== 'undefined') {
   padding: 12px 20px;
   cursor: pointer;
   user-select: none;
-  min-width: 200px;
+  min-width: 100px;
   transition: all 0.2s ease;
 }
 

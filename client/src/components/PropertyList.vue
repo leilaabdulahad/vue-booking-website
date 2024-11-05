@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useFilteringLogic } from '../composables/useFilteringLogic'
-import FilterControls from './FiltersControl.vue'
+import Navbar from './Navbar.vue'
 import PropertyCard from './PropertyCard.vue'
 import OffersCarousel from './OffersCarousel.vue'
 import { useProperties } from '../composables/useProperties'
@@ -21,7 +21,6 @@ const {
   handleImageError,
   nextImage,
   prevImage
-
 } = useImageCarousel(properties)
 
 const {
@@ -42,14 +41,14 @@ onMounted(async () => {
 
 <template>
   <div class="property-list-page">
-    <FilterControls 
+    <Navbar
       :initialSearchQuery="searchQuery"
       :initialCheckInDate="checkInDate"
       :initialCheckOutDate="checkOutDate"
       :initialGuestCount="guestCount"
-      @filterUpdated="handleFilters" 
+      @filterUpdated="handleFilters"
     />
-
+    
     <OffersCarousel
       :properties="properties"
       :currentImageIndexes="currentImageIndexes"
@@ -60,15 +59,14 @@ onMounted(async () => {
       @prevImage="prevImage"
       @nextImage="nextImage"
     />
-    
+
     <h1 class="property-title">Populära destinationer</h1>
-    
     <div v-if="loading" class="loading-indicator">Laddar...</div>
     <div v-if="error" class="error-message">{{ error }}</div>
-    
-    <TransitionGroup 
-      name="property-list" 
-      tag="div" 
+
+    <TransitionGroup
+      name="property-list"
+      tag="div"
       class="property-grid"
     >
       <PropertyCard
