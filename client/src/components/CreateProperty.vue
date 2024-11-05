@@ -23,7 +23,7 @@ const {
 
 <template>
   <div class="create-property">
-    <h2 class="title">Create a New Property</h2>
+    <h2 class="title">Publicera boende</h2>
     
     <div v-if="!isSignedIn" class="signin-container">
       <p>Please sign in to create a property.</p>
