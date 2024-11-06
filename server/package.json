@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node dist/server.js",
     "dev": "nodemon src/server.ts",
-    "build": "tsc"
+    "build": "vue-cli-service build --dest public"
   },
   "dependencies": {
     "@clerk/clerk-sdk-node": "^5.0.45",
