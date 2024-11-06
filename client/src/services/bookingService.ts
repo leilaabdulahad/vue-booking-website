@@ -1,6 +1,6 @@
-import axios from 'axios'
+import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 export const fetchUnavailableDates = async (propertyId: string) => {
   try {
@@ -11,7 +11,7 @@ export const fetchUnavailableDates = async (propertyId: string) => {
     }))
   } catch (err) {
     console.error('Error fetching unavailable dates:', err)
-    throw err;
+    throw err
   }
 }
 
@@ -42,23 +42,21 @@ export const bookProperty = async (
       postalCode,
       city,
       email,
-      phoneNumber
+      phoneNumber,
     })
-    return response.data;
+    return response.data
   } catch (err) {
     console.error('Error booking property:', err)
-    throw err;
+    throw err
   }
 }
 
-// fetching user bookings
 export const fetchUserBookings = async (clerkUserId: string) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/api/bookings/user/${clerkUserId}`)
-    return response.data
+    return response.data;
   } catch (err) {
     console.error('Error fetching user bookings:', err)
     throw err
   }
 }
-
