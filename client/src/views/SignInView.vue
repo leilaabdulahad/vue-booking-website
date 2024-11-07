@@ -1,12 +1,13 @@
+<script setup lang="ts">
+import { SignIn } from 'vue-clerk'
+</script>
+
 <template>
     <div class="sign-in-container">
         <SignIn path="/sign-in" />
     </div>
 </template>
 
-<script setup lang="ts">
-import { SignIn } from 'vue-clerk'
-</script>
 
 <style>
 .sign-in-container{

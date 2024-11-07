@@ -1,35 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useAuth } from 'vue-clerk'
-import { fetchUserBookings } from '../services/bookingService'
+import { onMounted } from 'vue'
+import { useFetchBookings } from '@/composables/useFetchBookings'
 
-const { userId } = useAuth()
-const bookings = ref<Booking[]>([])
-const loading = ref(true)
-const error = ref<string | null>(null)
-
-const formatDate = (date: Date) => {
-  return new Date(date).toLocaleDateString()
-}
-
-const loadBookings = async () => {
-  const currentUserId = userId.value
-  if (!currentUserId) {
-    error.value = 'No user ID found. Please log in.'
-    loading.value = false;
-    return;
-  }
-  try {
-    loading.value = true
-    error.value = null
-    bookings.value = await fetchUserBookings(currentUserId)
-  } catch (err) {
-    error.value = 'Failed to load bookings. Please try again later.'
-    console.error('Error loading bookings:', err)
-  } finally {
-    loading.value = false
-  }
-}
+const {
+  loading,
+  error,
+  loadBookings,
+  formatDate,
+  bookings
+} = useFetchBookings()
 
 onMounted(() => {
   loadBookings()
@@ -84,7 +63,7 @@ onMounted(() => {
                   'status-cancelled': booking.status === 'cancelled'
                 }"
               >
-                {{ booking.status }}
+                {{ booking.status === 'confirmed' ? 'Bekräftad' : booking.status }}
               </span>
             </div>
           </div>

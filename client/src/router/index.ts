@@ -5,7 +5,7 @@ import CreatePropertyView from '@/views/CreatePropertyView.vue'
 import PropertiesViews from '@/views/PropertiesViews.vue'
 import PropertyDetail from '@/components/PropertyDetail.vue'
 import FavoritesView from '@/views/FavoritesView.vue'
-import MyBookings from '@/views/MyBookings.vue'
+import MyBookings from '@/views/MyBookingsView.vue'
 import BookingPage from '@/views/BookingView.vue'
 import BookingConfirmation from '@/views/BookingConfirmation.vue' 
 
