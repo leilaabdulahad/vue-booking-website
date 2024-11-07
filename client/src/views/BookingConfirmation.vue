@@ -32,11 +32,11 @@ const bookingId = route.query.bookingId as string
       <div v-else>
         <p>Ingen bokningsinformation tillgänglig</p>
       </div>
+      <div class="button-group">
+        <router-link to="/" class="home-link">Tillbaka till Hem</router-link>
+        <router-link to="/my-bookings" class="my-bookings-link">Mina Bokningar</router-link>
+      </div>
     </div>
-  </div>
-  <div class="button-group">
-    <router-link to="/" class="home-link">Tillbaka till Hem</router-link>
-    <router-link to="/my-bookings" class="my-bookings-link">Mina Bokningar</router-link>
   </div>
 </template>
 
@@ -48,7 +48,6 @@ const bookingId = route.query.bookingId as string
   padding: 20px;
   text-align: center;
   margin-top: 100px;
-  font-family: 'Arial', sans-serif;
 }
 
 h1 {
@@ -57,12 +56,12 @@ h1 {
 }
 
 .confirmation-card {
-  background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   padding: 20px;
   margin: 0 auto;
   transition: box-shadow 0.3s ease;
+  max-width: 800px;
 }
 
 .confirmation-card:hover {

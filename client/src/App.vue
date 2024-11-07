@@ -19,5 +19,12 @@ import Footer from './components/Footer.vue'
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+footer {
+  margin-top: auto;
 }
 </style>
