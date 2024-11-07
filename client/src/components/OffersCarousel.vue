@@ -157,7 +157,6 @@ const handleResize = () => {
 .offers-section {
   margin: 40px 0;
   padding: 20px;
-  background-color: #f8f9fa;
   border-radius: 12px;
 }
 
