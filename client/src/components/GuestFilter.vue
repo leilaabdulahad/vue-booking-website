@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useGuestCount } from '@/composables/useGuestCount'
+import { useGuestCount } from '@/composables/guest/useGuestCount'
 
 const emit = defineEmits(['updateGuestCount'])
 

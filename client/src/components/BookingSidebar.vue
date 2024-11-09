@@ -2,8 +2,8 @@
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BookProperty from './BookProperty.vue'
-import { usePropertyPricing } from '@/composables/usePropertyPricing'
-import { useBookingDates } from '@/composables/useBookingDates'
+import { usePropertyPricing } from '@/composables/property/usePropertyPricing'
+import { useBookingDates } from '@/composables/booking/useBookingDates'
 
 const props = defineProps<{
   property: Property

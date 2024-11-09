@@ -7,7 +7,7 @@ import ImageCarousel from './ImageCarousel.vue'
 import HostSection from './HostSection.vue'
 import AmenitiesSection from './AmenitiesSection.vue'
 import BookingSidebar from './BookingSidebar.vue'
-import { fetchPropertyById } from '../services/propertyService'
+import { fetchPropertyById } from '@/services/propertyService'
 
 const route = useRoute()
 const router = useRouter()

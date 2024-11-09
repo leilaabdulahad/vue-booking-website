@@ -3,7 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { useUser } from 'vue-clerk'
 import PropertyCard from '@/components/PropertyCard.vue'
-import { fetchFavorites as getFavorites, fetchPropertyById } from '../services/favoritesService'
+import { fetchFavorites as getFavorites, fetchPropertyById } from '@/services/favoritesService'
 
 const favorites = ref<Property[]>([])
 const loading = ref(false)

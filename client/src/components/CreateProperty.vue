@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { SignInButton, useUser } from 'vue-clerk'
-import { useUserSync } from '../composables/useUserSync'
-import { usePropertyForm } from '../composables/usePropertyForm'
+import { useUserSync } from '@/composables/user/useUserSync'
+import { usePropertyForm } from '@/composables/property/usePropertyForm'
 
 const { isSignedIn, user } = useUserSync()
 const {

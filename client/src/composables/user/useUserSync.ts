@@ -1,6 +1,6 @@
 import { watch } from 'vue'
 import { useUser } from 'vue-clerk'
-import { syncUserWithDatabase } from '../services/userService'
+import { syncUserWithDatabase } from '../../services/userService'
 
 //watches for changes in user authentication state and syncs the user with the database if signed in 
 export const useUserSync = () => {
