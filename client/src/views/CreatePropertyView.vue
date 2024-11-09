@@ -1,5 +1,5 @@
   <script setup lang="ts">
-  import CreateProperty from '../components/CreateProperty.vue'
+  import CreateProperty from '@/components/CreateProperty.vue'
   </script>
   
   <template>
