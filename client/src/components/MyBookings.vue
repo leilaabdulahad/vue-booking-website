@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { useFetchBookings } from '@/composables/useFetchBookings'
+import { useFetchBookings } from '@/composables/booking/useFetchBookings'
 
 const {
   loading,

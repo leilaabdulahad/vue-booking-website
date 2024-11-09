@@ -2,7 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { useUser } from 'vue-clerk'
 import { fetchFavoriteStatus, addToFavorites, removeFromFavorites } from '@/services/favoritesService'
-import { useFavorite } from '../composables/useFavorite'
+import { useFavorite } from '@/composables/favorite/useFavorite'
 
 const props = defineProps<{
   propertyId: string

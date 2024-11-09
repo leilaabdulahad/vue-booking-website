@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { watch } from 'vue'
 import { useUser } from 'vue-clerk'
-import { syncUserWithDatabase } from '../services/userService';
+import { syncUserWithDatabase } from '@/services/userService'
 
 const { isSignedIn, user } = useUser()
 

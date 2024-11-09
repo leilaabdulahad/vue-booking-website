@@ -3,8 +3,8 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUser } from 'vue-clerk'
 import { fetchPropertyById } from '../services/propertyService'
-import { useBooking } from '@/composables/useBooking'
-import { usePricing } from '@/composables/usePricing'
+import { useBooking } from '@/composables/booking/useBooking'
+import { usePricing } from '@/composables/pricing/usePricing'
 
 const route = useRoute()
 const router = useRouter()

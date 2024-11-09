@@ -3,7 +3,7 @@ import GuestFilter from '@/components/GuestFilter.vue'
 import Datepicker from '@vuepic/vue-datepicker'
 import SearchFilter from '@/components/SearchFilter.vue'
 import '@vuepic/vue-datepicker/dist/main.css'
-import { useFilter } from '../composables/useFilter'
+import { useFilter } from '../composables/filter/useFilter'
 import type { FilterState } from '@/types/filter'
 
 //emits event to parent when filters are updated

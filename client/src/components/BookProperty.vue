@@ -2,8 +2,8 @@
 import { computed, watch } from 'vue'
 import Datepicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
-import { useUnavailableDates } from '../composables/useUnavailableDates'
-import { useDateRange } from '../composables/useDateRange'
+import { useUnavailableDates } from '@/composables/booking/useUnavailableDates'
+import { useDateRange } from '@/composables/ui/useDateRange'
 
 const props = defineProps<{
   propertyId: string

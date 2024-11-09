@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import axios from 'axios'
-import { bookProperty } from '../services/bookingService'
+import { bookProperty } from '../../services/bookingService'
 
 export const useBooking = (propertyId: string, userId: string) => {
   const error = ref<string | null>(null)

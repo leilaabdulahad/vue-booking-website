@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { createNewProperty } from '../services/propertyService'
+import { createNewProperty } from '../../services/propertyService'
 
 //handles the form state, file upload logic, property creation functionality 
 export const usePropertyForm = (userId: string) => {

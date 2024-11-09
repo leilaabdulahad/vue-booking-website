@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useFilteringLogic } from '../composables/useFilteringLogic'
+import { useFilteringLogic } from '@/composables/filter/useFilteringLogic'
 import Navbar from './Navbar.vue'
 import PropertyCard from './PropertyCard.vue'
 import OffersCarousel from './OffersCarousel.vue'
-import { useProperties } from '../composables/useProperties'
-import { useImageCarousel } from '../composables/useImageCarousel'
+import { useProperties } from '@/composables/property/useProperties'
+import { useImageCarousel } from '@/composables/ui/useImageCarousel'
 
 const {
   loading,
