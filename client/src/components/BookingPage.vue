@@ -3,8 +3,8 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUser } from 'vue-clerk'
 import { fetchPropertyById } from '../services/propertyService'
-import { bookProperty } from '../services/bookingService'
 import { useBooking } from '@/composables/useBooking'
+import { usePricing } from '@/composables/usePricing'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,45 +15,26 @@ const checkInDate = ref(route.query.checkIn as string)
 const checkOutDate = ref(route.query.checkOut as string)
 const property = ref<Property | null>(null)
 const loading = ref(true)
+const error = ref('')
 
 const { 
-  error, 
+  error: bookingError, 
   success, 
-  isLoading, 
+  isLoading: bookingLoading, 
   handleBooking 
-  } = useBooking(propertyId, user.value?.id ?? '')
+} = useBooking(propertyId, user.value?.id ?? '')
 
-const cleaningFee = 500
-const serviceFee = 350
-
-const numberOfNights = computed(() => {
-  if (!checkInDate.value || !checkOutDate.value) return 0
-  const start = new Date(checkInDate.value)
-  const end = new Date(checkOutDate.value)
-  return Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
-})
-
-const basePrice = computed(() => {
-  if (!property.value) return 0
-  return property.value.pricePerNight * numberOfNights.value
-})
-
-const totalPrice = computed(() => {
-  return basePrice.value + cleaningFee + serviceFee
-})
-
-const formatDate = (dateString: string): string => {
-  const date = new Date(dateString)
-  const day = date.getDate()
-  const month = date.toLocaleString('sv-SE', { month: 'long' })
-  return `${day} ${month}`
-}
-
-const formattedDateRange = computed(() => {
-  if (!checkInDate.value || !checkOutDate.value) return ''
-  const formattedCheckIn = formatDate(checkInDate.value)
-  const formattedCheckOut = formatDate(checkOutDate.value)
-  return `${formattedCheckIn} - ${formattedCheckOut}`
+const {
+  numberOfNights,
+  basePrice,
+  totalPrice,
+  formattedDateRange,
+  cleaningFee,
+  serviceFee
+} = usePricing({
+  property,
+  checkInDate,
+  checkOutDate
 })
 
 const fetchProperty = async () => {
@@ -73,24 +54,26 @@ const handleBookNow = async () => {
     return
   }
 
-  const firstName = (document.querySelector('input[placeholder="Förnamn"]') as HTMLInputElement)?.value
-  const lastName = (document.querySelector('input[placeholder="Efternamn"]') as HTMLInputElement)?.value
-  const address = (document.querySelector('input[placeholder="Adress"]') as HTMLInputElement)?.value
-  const postalCode = (document.querySelector('input[placeholder="Postnummer"]') as HTMLInputElement)?.value
-  const city = (document.querySelector('input[placeholder="Ort"]') as HTMLInputElement)?.value
-  const email = (document.querySelector('input[placeholder="Mailadress"]') as HTMLInputElement)?.value
-  const phoneNumber = (document.querySelector('input[placeholder="Telefonnummer"]') as HTMLInputElement)?.value
+  const formData = {
+    firstName: (document.querySelector('input[placeholder="Förnamn"]') as HTMLInputElement)?.value,
+    lastName: (document.querySelector('input[placeholder="Efternamn"]') as HTMLInputElement)?.value,
+    address: (document.querySelector('input[placeholder="Adress"]') as HTMLInputElement)?.value,
+    postalCode: (document.querySelector('input[placeholder="Postnummer"]') as HTMLInputElement)?.value,
+    city: (document.querySelector('input[placeholder="Ort"]') as HTMLInputElement)?.value,
+    email: (document.querySelector('input[placeholder="Mailadress"]') as HTMLInputElement)?.value,
+    phoneNumber: (document.querySelector('input[placeholder="Telefonnummer"]') as HTMLInputElement)?.value
+  }
 
   const bookingResult = await handleBooking(
     checkInDate.value,
     checkOutDate.value,
-    firstName,
-    lastName,
-    address,
-    postalCode,
-    city,
-    email,
-    phoneNumber
+    formData.firstName,
+    formData.lastName,
+    formData.address,
+    formData.postalCode,
+    formData.city,
+    formData.email,
+    formData.phoneNumber
   )
 
   if (success.value) {
@@ -98,8 +81,6 @@ const handleBookNow = async () => {
       name: 'BookingConfirmation',
       query: { bookingId: bookingResult._id }
     })
-  } else if (error.value) {
-    console.error('Failed to book property:', error.value)
   }
 }
 
@@ -115,18 +96,25 @@ fetchProperty()
     <div class="header">
       <h1>Skicka bokningsförfrågan</h1>
     </div>
+
     <div v-if="loading" class="loading">Loading property details...</div>
-    <div v-if="error" class="error">{{ error }}</div>
+    <div v-if="error || bookingError" class="error">{{ error || bookingError }}</div>
+
     <div v-else-if="property" class="booking-details">
+      <!-- Property -->
       <div class="property-card">
         <img :src="property.images[0]" :alt="property.title" class="property-image">
         <div class="property-info">
           <h2>{{ property.title }}</h2>
           <p>{{ property.rooms }} rum · {{ property.beds }} sängar · {{ property.maxGuests }} gäster</p>
+          
+          <!-- Date -->
           <div class="date-section">
             <p class="label">Datum</p>
             <p>{{ formattedDateRange }}</p>
           </div>
+
+          <!-- Pricing -->
           <div class="fees-section">
             <div class="fee-line">
               <p>{{ numberOfNights }} nätter x {{ property.pricePerNight }} kr</p>
@@ -149,6 +137,7 @@ fetchProperty()
         </div>
       </div>
 
+      <!-- Guest form -->
       <div class="guest-info">
         <h3>Dina kontaktuppgifter</h3>
         <div class="form-grid">
@@ -157,11 +146,17 @@ fetchProperty()
           <input type="text" placeholder="Adress" class="full-width">
           <input type="text" placeholder="Postnummer">
           <input type="text" placeholder="Ort">
-          <input type="email" placeholder="Mailadress" :value="user?.emailAddresses[0].emailAddress" class="full-width">
+          <input 
+            type="email" 
+            placeholder="Mailadress" 
+            :value="user?.emailAddresses[0].emailAddress" 
+            class="full-width"
+          >
           <input type="tel" placeholder="Telefonnummer" class="full-width">
         </div>
       </div>
 
+      <!-- Payment form -->
       <div class="payment-info">
         <h3>Betalning</h3>
         <div class="form-grid">
@@ -171,16 +166,21 @@ fetchProperty()
         </div>
       </div>
       
-      <button @click="handleBookNow" :disabled="isButtonDisabled" class="book-now-btn">
-        {{ loading ? 'Laddar...' : 'Reservera och betala' }}
+      <!-- Booking button -->
+      <button 
+        @click="handleBookNow" 
+        :disabled="isButtonDisabled" 
+        class="book-now-btn"
+      >
+        {{ bookingLoading ? 'Laddar...' : 'Reservera och betala' }}
       </button>
     </div>
+
     <div v-else class="error">
       No property details available. Try again
     </div>
   </div>
 </template>
-
 
 <style scoped>
 .booking-page {
@@ -195,12 +195,6 @@ fetchProperty()
   display: flex;
   align-items: center;
   margin-bottom: 20px;
-}
-
-.back-arrow {
-  font-size: 24px;
-  margin-right: 10px;
-  cursor: pointer;
 }
 
 h1 {
