@@ -33,7 +33,7 @@ const bookingId = route.query.bookingId as string
         <p>Ingen bokningsinformation tillgänglig</p>
       </div>
       <div class="button-group">
-        <router-link to="/" class="home-link">Tillbaka till Hem</router-link>
+        <router-link to="/" class="home-link">Hem</router-link>
         <router-link to="/my-bookings" class="my-bookings-link">Mina Bokningar</router-link>
       </div>
     </div>

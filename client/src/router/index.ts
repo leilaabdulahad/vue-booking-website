@@ -7,7 +7,7 @@ import PropertyDetail from '@/components/PropertyDetail.vue'
 import FavoritesView from '@/views/FavoritesView.vue'
 import MyBookings from '@/views/MyBookingsView.vue'
 import BookingPage from '@/views/BookingView.vue'
-import BookingConfirmation from '@/views/BookingConfirmation.vue' 
+import BookingConfirmationView from '@/views/BookingConfirmationView.vue' 
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -46,7 +46,7 @@ const router = createRouter({
     {
       path: '/booking-confirmation', 
       name: 'BookingConfirmation',
-      component: BookingConfirmation 
+      component: BookingConfirmationView 
     },
     {
       path: '/my-bookings',
