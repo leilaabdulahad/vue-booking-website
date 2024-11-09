@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import PropertyCard from './PropertyCard.vue'
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted } from 'vue'
 
 interface Props {
   properties: Property[]
   currentImageIndexes: { [key: string]: number }
   imageLoadErrors: { [key: string]: boolean }
-  checkInDate: string | null
-  checkOutDate: string | null
+  checkInDate?: string | null 
+  checkOutDate?: string | null
 }
 
 const props = defineProps<Props>()
@@ -122,8 +122,8 @@ const handleResize = () => {
               :property="property"
               :currentImageIndex="currentImageIndexes[property._id]"
               :hasImageLoadError="imageLoadErrors[property._id]"
-              :checkInDate="checkInDate"
-              :checkOutDate="checkOutDate"
+              :checkInDate="props.checkInDate || null"
+              :checkOutDate="props.checkOutDate || null"
               @imageError="emit('imageError', $event)"
               @prevImage="emit('prevImage', $event)"
               @nextImage="emit('nextImage', $event)"
@@ -152,6 +152,7 @@ const handleResize = () => {
     </div>
   </section>
 </template>
+
 
 <style scoped>
 .offers-section {
