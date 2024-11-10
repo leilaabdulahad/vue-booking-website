@@ -9,7 +9,7 @@ const route = useRoute()
 const isMenuActive = ref(false)
 const isFiltersVisible = ref(false)
 
-//computes whether we're on the home page
+// Computes whether we're on the home page
 const isHomePage = computed(() => route.path === '/')
 
 const toggleMenu = () => {
@@ -21,14 +21,14 @@ const toggleFilters = (event: Event) => {
   isFiltersVisible.value = !isFiltersVisible.value
 }
 
-// closing filters when clicking outside
+// Closing filters when clicking outside
 const closeFilters = (event: Event) => {
   if (isFiltersVisible.value) {
     isFiltersVisible.value = false
   }
 }
 
-// listens to outside clicks
+// Listens to outside clicks
 onMounted(() => {
   document.addEventListener('click', closeFilters)
 })
@@ -60,7 +60,6 @@ const handleFilterUpdate = (filterState: FilterState) => {
         EurBnB
       </router-link>
 
-      <!-- Show filters inline on desktop -->
       <div v-if="isHomePage" class="navbar-filters-desktop">
         <FilterControls
           :initialSearchQuery="initialSearchQuery"
@@ -164,6 +163,8 @@ const handleFilterUpdate = (filterState: FilterState) => {
   color: #FC4646;
   text-decoration: none;
   transition: color 0.3s ease;
+  margin-right: 20px;
+
 }
 
 .navbar-brand:hover {
