@@ -1,66 +1,23 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 import BookProperty from './BookProperty.vue'
-import { usePropertyPricing } from '@/composables/property/usePropertyPricing'
-import { useBookingDates } from '@/composables/booking/useBookingDates'
+import { usePropertyBooking } from '@/composables/property/usePropertyBooking'
 
 const props = defineProps<{
   property: Property
   propertyId: string
 }>()
 
-const route = useRoute()
-const router = useRouter()
-
-const initialCheckInDate = ref<string | null>(route.query.checkIn as string || null)
-const initialCheckOutDate = ref<string | null>(route.query.checkOut as string || null)
-
 const {
   bookingCheckInDate,
   bookingCheckOutDate,
-  updateDates
-} = useBookingDates(props.propertyId)
-
-// using computed values for pricing calculations to ensure reactivity
-const currentCheckInDate = computed(() => bookingCheckInDate.value)
-const currentCheckOutDate = computed(() => bookingCheckOutDate.value)
-
-const {
+  updateDates,
   numberOfNights,
-  basePrice,
   totalPrice,
-  formatPrice
-} = usePropertyPricing({
-  checkInDate: currentCheckInDate,
-  checkOutDate: currentCheckOutDate,
-  pricePerNight: props.property.pricePerNight
-})
+  formatPrice,
+  isDateRangeSelected,
+  redirectToBookingPage
+} = usePropertyBooking(props.property, props.propertyId)
 
-const isDateRangeSelected = computed(() => bookingCheckInDate.value && bookingCheckOutDate.value)
-
-// watching for date changes and update pricing
-watch([bookingCheckInDate, bookingCheckOutDate], ([newCheckIn, newCheckOut], [oldCheckIn, oldCheckOut]) => {
-  if (newCheckIn !== oldCheckIn || newCheckOut !== oldCheckOut) {
-    // pricing will automatically update due to the computed dependencies
-    console.log('Dates updated:', newCheckIn, newCheckOut)
-  }
-})
-
-const redirectToBookingPage = () => {
-  if (bookingCheckInDate.value && bookingCheckOutDate.value) {
-    router.push({
-      name: 'BookingPage',
-      query: {
-        propertyId: props.propertyId,
-        checkIn: bookingCheckInDate.value,
-        checkOut: bookingCheckOutDate.value
-      }
-    })
-  } else {
-    alert('Please select check-in and check-out dates before proceeding')
-  }
-}
 </script>
 
 <template>
