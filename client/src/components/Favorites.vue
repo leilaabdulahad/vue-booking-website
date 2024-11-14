@@ -3,7 +3,7 @@ import { onMounted } from 'vue'
 import { SignInButton } from 'vue-clerk'
 import PropertyCard from '@/components/PropertyCard.vue'
 import { useFavoritesList } from '@/composables/favorite/useFavoriteList'
-import { useAuth } from '@/composables/useAuth'
+import { useAuth } from '@/composables/user/useAuth'
 
 const { isSignedIn, user, isLoaded } = useAuth()
 const { 

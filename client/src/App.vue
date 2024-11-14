@@ -1,20 +1,22 @@
 <script setup lang="ts">
-import Navbar from './components/Navbar.vue'
-import UserAuth from './components/UserAuth.vue'
-import Footer from './components/Footer.vue'
+import Navbar from '@/components/Navbar.vue'
+import Footer from '@/components/Footer.vue'
+import { useUserSync } from '@/composables/user/useUserSync'
+
+useUserSync()
+
 </script>
 
 <template>
   <div class="app">
     <Navbar />
     <router-view />
-    <UserAuth />
     <Footer />
   </div>
 </template>
 
 <style scoped>
-.app{
+.app {
   font-family: sans-serif;
   max-width: 1200px;
   margin: 0 auto;
