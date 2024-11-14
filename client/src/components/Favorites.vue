@@ -1,81 +1,65 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import axios from 'axios'
-import { useUser } from 'vue-clerk'
+import { onMounted } from 'vue'
+import { SignInButton } from 'vue-clerk'
 import PropertyCard from '@/components/PropertyCard.vue'
-import { fetchFavorites as getFavorites, fetchPropertyById } from '@/services/favoritesService'
+import { useFavoritesList } from '@/composables/favorite/useFavoriteList'
+import { useAuth } from '@/composables/useAuth'
 
-const favorites = ref<Property[]>([])
-const loading = ref(false)
-const error = ref<string | null>(null)
-
-const { user, isLoaded } = useUser()
-
-const fetchFavorites = async () => {
-  if (!user.value || !isLoaded.value) return
-
-  try {
-    loading.value = true
-    const favoriteIds = await getFavorites(user.value.id)
-    const propertyResponses = await Promise.all(
-      favoriteIds.map((id: { propertyId: string }) => fetchPropertyById(id.propertyId))
-    )
-
-    favorites.value = propertyResponses
-    error.value = null
-  } catch (err) {
-    console.error('Error fetching favorites:', err)
-    if (axios.isAxiosError(err)) {
-      error.value = `Error fetching favorites: ${err.message}. ${err.response?.data?.message || ''}`
-    } else {
-      error.value = 'An unexpected error occurred while fetching favorites'
-    }
-  } finally {
-    loading.value = false;
-  }
-}
+const { isSignedIn, user, isLoaded } = useAuth()
+const { 
+  favorites, 
+  loading, 
+  error, 
+  fetchFavoritesList, 
+  removeFavoriteFromList 
+} = useFavoritesList()
 
 const handleFavoriteToggled = (propertyId: string) => {
-  favorites.value = favorites.value.filter(property => property._id !== propertyId)
+  removeFavoriteFromList(propertyId)
 }
-
-watch([user, isLoaded], ([newUser, loaded]) => {
-  if (newUser && loaded) {
-    fetchFavorites()
-  }
-})
 
 onMounted(() => {
   if (isLoaded.value && user.value) {
-    fetchFavorites()
+    fetchFavoritesList()
   }
 })
 </script>
 
 <template>
-  <div class="favorite-list-page">
+  <div v-if="isSignedIn" class="favorite-list-page">
     <h1 class="favorite-title">Favoriter</h1>
-
     <div v-if="loading" class="loading-indicator">Laddar...</div>
     <div v-if="error" class="error-message">{{ error }}</div>
     <div v-if="!loading && favorites.length === 0" class="no-favorites">
       Inga favoriter
     </div>
-
     <TransitionGroup name="favorite-list" tag="div" class="favorite-grid">
-      <PropertyCard 
-        v-for="property in favorites" 
-        :key="property._id" 
+      <PropertyCard
+        v-for="property in favorites"
+        :key="property._id"
         :property="property"
-        checkInDate="" 
+        checkInDate=""
         checkOutDate=""
-        @favoriteToggled="handleFavoriteToggled" 
+        @favoriteToggled="handleFavoriteToggled"
       />
     </TransitionGroup>
   </div>
+  <div v-else class="signin-container">
+    <p>Du måste vara inloggad för att se dina favorit boenden</p>
+    <SignInButton />
+  </div>
 </template>
 
+
 <style scoped>
+.signin-container{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 200px;
+}
+
 .favorite-list-page {
   padding: 20px;
   max-width: 1200px;
