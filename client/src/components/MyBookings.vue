@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useFetchBookings } from '@/composables/booking/useFetchBookings'
+import { useUserSync } from '@/composables/user/useUserSync'
+import {SignInButton} from 'vue-clerk'
+const { isSignedIn, user } = useUserSync()
 
 const {
   loading,
@@ -17,7 +20,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="my-bookings">
+  <div v-if="isSignedIn" class="my-bookings">
     <div class="header-section">
       <h1 class="page-title">Mina bokningar</h1>
       <div class="header-line"></div>
@@ -92,9 +95,20 @@ onMounted(() => {
       </div>
     </div>
   </div>
+  <div v-else="!isSignedIn" class="signin-container">
+    <p>Du måste vara inloggad för att se dina bokningar</p>
+    <SignInButton />
+  </div>
 </template>
 
 <style scoped>
+.signin-container{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 200px;
+}
 .my-bookings {
   margin: 3rem auto;
   max-width: 1200px;

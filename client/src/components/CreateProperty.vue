@@ -22,108 +22,119 @@ const {
 </script>
 
 <template>
+  <div v-if="isSignedIn">
   <div class="create-property">
-    <h2 class="title">Publicera boende</h2>
     
-    <div v-if="!isSignedIn" class="signin-container">
-      <p>Please sign in to create a property.</p>
-      <SignInButton />
-    </div>
-
-    <form v-else @submit.prevent="createProperty" class="property-form">
-      <div class="form-group">
-        <label for="title">Titel</label>
-        <input id="title" v-model.trim="title" required class="form-input"  />
-      </div>
-
-      <div class="form-group">
-        <label for="description">Beskrivning</label>
-        <textarea 
-          id="description" 
-          v-model="description" 
-          required 
-          class="form-textarea"
-          rows="4"
-        ></textarea>
-      </div>
-
-      <div class="form-row">
+      <h2 class="title">Publicera boende</h2>
+      <form @submit.prevent="createProperty" class="property-form">
         <div class="form-group">
-          <label for="country">Land</label>
-          <input id="country" v-model="country" required class="form-input"  />
+          <label for="title">Titel</label>
+          <input id="title" v-model.trim="title" required class="form-input" />
         </div>
-        <div class="form-group">
-          <label for="city">Stad</label>
-          <input id="city" v-model="city" required class="form-input" />
-        </div>
-      </div>
 
-      <div class="form-row">
         <div class="form-group">
-          <label for="maxGuests">Max antal gäster</label>
-          <input id="maxGuests" type="number" v-model="maxGuests" required class="form-input" min="1" />
+          <label for="description">Beskrivning</label>
+          <textarea 
+            id="description" 
+            v-model="description" 
+            required 
+            class="form-textarea"
+            rows="4"
+          ></textarea>
         </div>
-        <div class="form-group">
-          <label for="pricePerNight">Pris per natt</label>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="country">Land</label>
+            <input id="country" v-model="country" required class="form-input" />
+          </div>
+          <div class="form-group">
+            <label for="city">Stad</label>
+            <input id="city" v-model="city" required class="form-input" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="maxGuests">Max antal gäster</label>
+            <input id="maxGuests" type="number" v-model="maxGuests" required class="form-input" min="1" />
+          </div>
+          <div class="form-group">
+            <label for="pricePerNight">Pris per natt</label>
             <input id="pricePerNight" type="number" v-model="pricePerNight" required class="form-input" min="0" />
+          </div>
         </div>
-      </div>
 
-      <div class="form-row">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="rooms">Rum</label>
+            <input id="rooms" type="number" v-model="rooms" required class="form-input" min="1" />
+          </div>
+          <div class="form-group">
+            <label for="beds">Sängar</label>
+            <input id="beds" type="number" v-model="beds" required class="form-input" min="1" />
+          </div>
+        </div>
+
         <div class="form-group">
-          <label for="rooms">Rum</label>
-          <input id="rooms" type="number" v-model="rooms" required class="form-input" min="1" />
-        </div>
-        <div class="form-group">
-          <label for="beds">Sängar</label>
-          <input id="beds" type="number" v-model="beds" required class="form-input" min="1" />
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="amenities">Bekvämligheter</label>
-        <input 
-          id="amenities" 
-          v-model="amenities" 
-          required 
-          class="form-input"
-          placeholder="Wifi, Parkering, Pool, m.m." 
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="images">Välj bilder (Max 10 bilder)</label>
-        <div class="file-upload">
-          <input
-            type="file"
-            id="images"
-            multiple
-            @change="handleFileUpload"
-            accept="image/*"
-            class="form-input-file"
+          <label for="amenities">Bekvämligheter</label>
+          <input 
+            id="amenities" 
+            v-model="amenities" 
+            required 
+            class="form-input"
+            placeholder="Wifi, Parkering, Pool, m.m." 
           />
         </div>
-      </div>
 
-      <div v-if="selectedFiles.length > 0" class="selected-files">
-        <p class="files-heading">Välj bilder</p>
-        <ul class="files-list">
-          <li v-for="(file, index) in selectedFiles" :key="index">
-            {{ file.name }}
-          </li>
-        </ul>
-      </div>
+        <div class="form-group">
+          <label for="images">Välj bilder (Max 10 bilder)</label>
+          <div class="file-upload">
+            <input
+              type="file"
+              id="images"
+              multiple
+              @change="handleFileUpload"
+              accept="image/*"
+              class="form-input-file"
+            />
+          </div>
+        </div>
 
-      <button type="submit" class="submit-button">Publicera</button>
-    </form>
+        <div v-if="selectedFiles.length > 0" class="selected-files">
+          <p class="files-heading">Välj bilder</p>
+          <ul class="files-list">
+            <li v-for="(file, index) in selectedFiles" :key="index">
+              {{ file.name }}
+            </li>
+          </ul>
+        </div>
 
+        <button type="submit" class="submit-button">Publicera</button>
+      </form>
+    </div>
+
+    
     <div v-if="errorMessage" class="error-message">
       {{ errorMessage }}
     </div>
+   
+  </div>
+  <div v-else="!isSignedIn" class="signin-container">
+    <p>Du måste vara inloggad för att publicera ditt boende</p>
+    <SignInButton />
   </div>
 </template>
 
 <style scoped>
+
+.signin-container{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 200px;
+}
 .create-property {
   max-width: 800px;
   margin: 2rem auto;
@@ -140,12 +151,7 @@ const {
   text-align: center;
 }
 
-.signin-container {
-  text-align: center;
-  padding: 2rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-}
+
 
 .property-form {
   display: flex;
