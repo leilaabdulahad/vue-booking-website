@@ -5,13 +5,12 @@ import { useUser } from 'vue-clerk'
 import { fetchPropertyById } from '../services/propertyService'
 import { useBooking } from '@/composables/booking/useBooking'
 import { usePricing } from '@/composables/pricing/usePricing'
+import ValidationModal from './ValidationModal.vue'
 
-// Route and router setup
 const route = useRoute()
 const router = useRouter()
 const { user } = useUser()
 
-// Booking and property setup
 const propertyId = route.query.propertyId as string
 const checkInDate = ref(route.query.checkIn as string)
 const checkOutDate = ref(route.query.checkOut as string)
@@ -19,12 +18,13 @@ const property = ref<Property | null>(null)
 const loading = ref(true)
 const error = ref('')
 
-// User data
 const firstName = ref<string>('')
 const lastName = ref<string>('')
 const email = ref<string>('')
 
-// Booking and pricing setup
+const showValidationModal = ref(false)
+const missingFields = ref<string[]>([])
+
 const { 
   error: bookingError, 
   success, 
@@ -53,7 +53,7 @@ const fetchProperty = async () => {
     console.error('Failed to fetch property details:', err)
     error.value = 'Failed to load property details. Try again'
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
@@ -73,26 +73,58 @@ const handleBookNow = async () => {
     return
   }
 
-  const formData = {
-    firstName: firstName.value,
-    lastName: lastName.value,
-    address: (document.querySelector('input[placeholder="Adress"]') as HTMLInputElement)?.value,
-    postalCode: (document.querySelector('input[placeholder="Postnummer"]') as HTMLInputElement)?.value,
-    city: (document.querySelector('input[placeholder="Ort"]') as HTMLInputElement)?.value,
-    email: email.value,
-    phoneNumber: (document.querySelector('input[placeholder="Telefonnummer"]') as HTMLInputElement)?.value,
+  interface FieldCheck {
+    value: string
+    label: string
+  }
+
+  const getInputValue = (selector: string): string => 
+    (document.querySelector(`input[placeholder="${selector}"]`) as HTMLInputElement)?.value.trim() ?? ''
+
+  const requiredFields: FieldCheck[] = [
+    { value: firstName.value, label: 'Förnamn' },
+    { value: lastName.value, label: 'Efternamn' },
+    { value: getInputValue('Adress'), label: 'Adress' },
+    { value: getInputValue('Postnummer'), label: 'Postnummer' },
+    { value: getInputValue('Ort'), label: 'Ort' },
+    { value: email.value, label: 'Mailadress' },
+    { value: getInputValue('Telefonnummer'), label: 'Telefonnummer' },
+    { value: getInputValue('Kortnummer'), label: 'Kortnummer' },
+    { value: getInputValue('Datum'), label: 'Datum' },
+    { value: getInputValue('CVV'), label: 'CVV' },
+  ];
+
+  const missing = requiredFields
+    .filter(field => !field.value)
+    .map(field => field.label)
+
+  if (missing.length > 0) {
+    missingFields.value = missing;
+    showValidationModal.value = true
+    return
+  }
+
+
+  const address = (document.querySelector('input[placeholder="Adress"]') as HTMLInputElement)?.value.trim()
+  const postalCode = (document.querySelector('input[placeholder="Postnummer"]') as HTMLInputElement)?.value.trim()
+  const city = (document.querySelector('input[placeholder="Ort"]') as HTMLInputElement)?.value.trim()
+  const phoneNumber = (document.querySelector('input[placeholder="Telefonnummer"]') as HTMLInputElement)?.value.trim()
+
+  if (!firstName.value || !lastName.value || !email.value || !address || !postalCode || !city || !phoneNumber) {
+    error.value = 'All fields are required'
+    return
   }
 
   const bookingResult = await handleBooking(
     checkInDate.value,
     checkOutDate.value,
-    formData.firstName,
-    formData.lastName,
-    formData.address,
-    formData.postalCode,
-    formData.city,
-    formData.email,
-    formData.phoneNumber
+    firstName.value,
+    lastName.value,
+    address,
+    postalCode,
+    city,
+    email.value,
+    phoneNumber
   )
 
   if (bookingResult?.confirmationToken) {
@@ -101,7 +133,7 @@ const handleBookNow = async () => {
       query: { token: bookingResult.confirmationToken },
     })
   } else {
-    error.value = 'No confirmation token received'
+    error.value = 'No confirmation token received';
   }
 }
 
@@ -111,7 +143,6 @@ const isButtonDisabled = computed(() => {
 
 fetchProperty()
 </script>
-
 
 <template>
   <div class="booking-page">
@@ -153,29 +184,29 @@ fetchProperty()
           </div>
         </div>
       </div>
+
       <div class="guest-info">
-  <h3>Dina kontaktuppgifter</h3>
-  <div class="form-grid">
-    <input type="text" placeholder="Förnamn" v-model="firstName" />
-    <input type="text" placeholder="Efternamn" v-model="lastName" />
-    <input type="text" placeholder="Adress" class="full-width" />
-    <input type="text" placeholder="Postnummer" />
-    <input type="text" placeholder="Ort" />
-    <input type="email" placeholder="Mailadress" v-model="email" class="full-width" />
-    <input type="tel" placeholder="Telefonnummer" class="full-width" />
-  </div>
-</div>
+        <h3>Dina kontaktuppgifter</h3>
+        <div class="form-grid">
+          <input type="text" placeholder="Förnamn" v-model="firstName" required />
+          <input type="text" placeholder="Efternamn" v-model="lastName" required />
+          <input type="text" placeholder="Adress" class="full-width" required />
+          <input type="text" placeholder="Postnummer" required />
+          <input type="text" placeholder="Ort" required />
+          <input type="email" placeholder="Mailadress" v-model="email" class="full-width" required />
+          <input type="tel" placeholder="Telefonnummer" class="full-width" required />
+        </div>
+      </div>
 
-
-      <!-- Payment form -->
       <div class="payment-info">
         <h3>Betalning</h3>
         <div class="form-grid">
-          <input type="text" placeholder="Kortnummer" class="full-width">
-          <input type="text" placeholder="Datum">
-          <input type="text" placeholder="CVV">
+          <input type="text" placeholder="Kortnummer" class="full-width" required />
+          <input type="text" placeholder="Datum" required />
+          <input type="text" placeholder="CVV" required />
         </div>
       </div>
+
       <button 
         @click="handleBookNow" 
         :disabled="isButtonDisabled" 
@@ -183,12 +214,18 @@ fetchProperty()
       >
         {{ bookingLoading ? 'Laddar...' : 'Reservera och betala' }}
       </button>
+      <ValidationModal
+        v-model:isOpen="showValidationModal"
+        :missing-fields="missingFields"
+      />
+      
     </div>
     <div v-else class="error">
       No property details available. Try again.
     </div>
   </div>
 </template>
+
 
 
 <style scoped>
