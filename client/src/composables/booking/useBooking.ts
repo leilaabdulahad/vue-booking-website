@@ -1,12 +1,13 @@
 import { ref } from 'vue'
 import axios from 'axios'
-import { bookProperty } from '../../services/bookingService'
+import { bookProperty } from '@/services/bookingService'
+import { useRouter } from 'vue-router'
 
-export const useBooking = (propertyId: string, userId: string) => {
+export const useBooking = (propertyId: string, userId: string | undefined) => {
   const error = ref<string | null>(null)
   const success = ref(false)
   const isLoading = ref(false)
-
+  
   const handleBooking = async (
     checkInDate: string,
     checkOutDate: string,
@@ -21,9 +22,18 @@ export const useBooking = (propertyId: string, userId: string) => {
     isLoading.value = true
     error.value = null
     success.value = false
-
+    
     try {
-      const numberOfNights = Math.round((new Date(checkOutDate).getTime() - new Date(checkInDate).getTime()) / (1000 * 60 * 60 * 24))
+      // Check for userId before proceeding
+      if (!userId) {
+        throw new Error('User must be logged in to make a booking')
+      }
+
+      const numberOfNights = Math.round(
+        (new Date(checkOutDate).getTime() - new Date(checkInDate).getTime()) /
+        (1000 * 60 * 60 * 24)
+      )
+
       const bookingResult = await bookProperty(
         propertyId,
         checkInDate,
@@ -38,15 +48,19 @@ export const useBooking = (propertyId: string, userId: string) => {
         email,
         phoneNumber
       )
-      success.value = true
-      return bookingResult
+
+      if (bookingResult.confirmationToken) {
+        success.value = true
+        return bookingResult
+      } else {
+        error.value = 'No confirmation token received'
+      }
     } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
         error.value = `Error booking property: ${err.response.data.message || err.message}`
       } else {
         error.value = 'An unexpected error occurred. Try again'
       }
-      console.error('Error booking property:', err)
     } finally {
       isLoading.value = false
     }
@@ -56,6 +70,6 @@ export const useBooking = (propertyId: string, userId: string) => {
     error,
     success,
     isLoading,
-    handleBooking
+    handleBooking,
   }
 }

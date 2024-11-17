@@ -1,45 +1,71 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { getBookingByToken } from '@/services/bookingService'
 
 const route = useRoute()
-const bookingId = route.query.bookingId as string
+const booking = ref<Booking | null>(null)
+const error = ref<string>('')
+const loading = ref(true)
+
+onMounted(async () => {
+  const token = route.query.token as string
+
+  if (!token) {
+    error.value = 'Ingen bokningsinformation tillgänglig'
+    loading.value = false
+    return
+  }
+
+  try {
+    const fetchedBooking = await getBookingByToken(token)
+    booking.value = fetchedBooking
+  } catch (err) {
+    error.value = 'Bokningen har utgått eller är ogiltig'
+  } finally {
+    loading.value = false
+  }
+});
 </script>
 
 <template>
   <div class="booking-confirmation">
-    <div class="confirmation-card">
-      <div v-if="bookingId" class="booking-info">
-        <div class="checkmark">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="50"
-            height="50"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#FC4646" 
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="checkmark-icon"
-          >
-            <path d="M20 6L9 17l-5-5" />
-          </svg>
-        </div>
-        <h1>Bokningsbekräftelse</h1>
-        <p>Boknings ID: <strong>{{ bookingId }}</strong></p>
-        <p>Bokningsbekräftelsen har skickats till din mailadress.</p>
+    <div v-if="loading" class="loading">
+      Laddar bokningsinformation...
+    </div>
+
+    <div v-else-if="error" class="error">
+      {{ error }}
+    </div>
+
+    <div v-else-if="booking" class="booking-info">
+      <div class="checkmark">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="50"
+          height="50"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#FC4646"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="checkmark-icon"
+        >
+          <path d="M20 6L9 17l-5-5" />
+        </svg>
       </div>
-      <div v-else>
-        <p>Ingen bokningsinformation tillgänglig</p>
-      </div>
-      <div class="button-group">
-        <router-link to="/" class="home-link">Hem</router-link>
-        <router-link to="/my-bookings" class="my-bookings-link">Mina Bokningar</router-link>
-      </div>
+      <h1>Bokningsbekräftelse</h1>
+      <p>Boknings ID: <strong>{{ booking?._id }}</strong></p>
+      <p>Bokningsbekräftelsen har skickats till {{ booking?.email }}</p>
+    </div>
+
+    <div class="button-group">
+      <router-link to="/" class="home-link">Hem</router-link>
+      <router-link to="/my-bookings" class="my-bookings-link">Mina Bokningar</router-link>
     </div>
   </div>
 </template>
-
 
 <style scoped>
 .booking-confirmation {

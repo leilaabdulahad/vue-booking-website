@@ -2,6 +2,7 @@ import axios from 'axios'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
+// Fetch unavailable dates for a property
 export const fetchUnavailableDates = async (propertyId: string) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/api/bookings/unavailable/${propertyId}`)
@@ -11,10 +12,11 @@ export const fetchUnavailableDates = async (propertyId: string) => {
     }))
   } catch (err) {
     console.error('Error fetching unavailable dates:', err)
-    throw err
+    throw err;
   }
 }
 
+// Create a new booking
 export const bookProperty = async (
   propertyId: string,
   startDate: string,
@@ -51,6 +53,18 @@ export const bookProperty = async (
   }
 }
 
+// Fetch a booking by confirmation token
+export const getBookingByToken = async (token: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/bookings/confirmation/${token}`)
+    return response.data;
+  } catch (err) {
+    console.error('Error fetching booking confirmation:', err)
+    throw err
+  }
+}
+
+// Fetch all bookings for a specific user
 export const fetchUserBookings = async (clerkUserId: string) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/api/bookings/user/${clerkUserId}`)
