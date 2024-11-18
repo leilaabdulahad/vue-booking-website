@@ -1,30 +1,43 @@
 <script setup lang="ts">
-import { ref, computed, watchEffect } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, ref } from 'vue'
 import { useUser } from 'vue-clerk'
-import { fetchPropertyById } from '../services/propertyService'
+import { useRoute, useRouter } from 'vue-router'
+import ValidationModal from './ValidationModal.vue'
 import { useBooking } from '@/composables/booking/useBooking'
 import { usePricing } from '@/composables/pricing/usePricing'
+import { usePropertyDetails } from '@/composables/property/usePropertyDetails'
+import { useGuestInfo } from '@/composables/guest/useGuestInfo'
+import { useFormValidation } from '@/composables/ui/useFormValidation'
 
-// Route and router setup
 const route = useRoute()
 const router = useRouter()
 const { user } = useUser()
 
-// Booking and property setup
 const propertyId = route.query.propertyId as string
 const checkInDate = ref(route.query.checkIn as string)
 const checkOutDate = ref(route.query.checkOut as string)
-const property = ref<Property | null>(null)
-const loading = ref(true)
-const error = ref('')
 
-// User data
-const firstName = ref<string>('')
-const lastName = ref<string>('')
-const email = ref<string>('')
+const { 
+  property, 
+  loading, 
+  error: propertyError,
+  fetchProperty 
+} = usePropertyDetails(propertyId)
 
-// Booking and pricing setup
+const { 
+  firstName, 
+  lastName, 
+  email 
+} = useGuestInfo()
+
+const {
+  showValidationModal,
+  missingFields,
+  error: validationError,
+  validateForm,
+  getInputValue
+} = useFormValidation()
+
 const { 
   error: bookingError, 
   success, 
@@ -45,54 +58,49 @@ const {
   checkOutDate,
 })
 
-// Fetch property details
-const fetchProperty = async () => {
-  try {
-    property.value = await fetchPropertyById(propertyId)
-  } catch (err) {
-    console.error('Failed to fetch property details:', err)
-    error.value = 'Failed to load property details. Try again'
-  } finally {
-    loading.value = false;
-  }
-}
+// Computed error state that combines all possible errors
+const error = computed(() => propertyError.value || bookingError.value || validationError.value)
 
-// Fill user details if logged in
-watchEffect(() => {
-  if (user.value) {
-    firstName.value = user.value.firstName || ''
-    lastName.value = user.value.lastName || ''
-    email.value = user.value.emailAddresses[0]?.emailAddress || ''
-  }
-})
-
-// Booking action
+// Booking
 const handleBookNow = async () => {
   if (!user.value) {
-    error.value = 'Please log in to book a property'
+    validationError.value = 'Please log in to book a property'
     return
   }
 
-  const formData = {
-    firstName: firstName.value,
-    lastName: lastName.value,
-    address: (document.querySelector('input[placeholder="Adress"]') as HTMLInputElement)?.value,
-    postalCode: (document.querySelector('input[placeholder="Postnummer"]') as HTMLInputElement)?.value,
-    city: (document.querySelector('input[placeholder="Ort"]') as HTMLInputElement)?.value,
-    email: email.value,
-    phoneNumber: (document.querySelector('input[placeholder="Telefonnummer"]') as HTMLInputElement)?.value,
+  // Required fields for booking
+  const requiredFields = [
+    { value: firstName.value, label: 'Förnamn' },
+    { value: lastName.value, label: 'Efternamn' },
+    { value: getInputValue('Adress'), label: 'Adress' },
+    { value: getInputValue('Postnummer'), label: 'Postnummer' },
+    { value: getInputValue('Ort'), label: 'Ort' },
+    { value: email.value, label: 'Mailadress' },
+    { value: getInputValue('Telefonnummer'), label: 'Telefonnummer' },
+    { value: getInputValue('Kortnummer'), label: 'Kortnummer' },
+    { value: getInputValue('Datum'), label: 'Datum' },
+    { value: getInputValue('CVV'), label: 'CVV' },
+  ]
+
+  if (!validateForm(requiredFields)) {
+    return
   }
+
+  const address = getInputValue('Adress')
+  const postalCode = getInputValue('Postnummer')
+  const city = getInputValue('Ort')
+  const phoneNumber = getInputValue('Telefonnummer')
 
   const bookingResult = await handleBooking(
     checkInDate.value,
     checkOutDate.value,
-    formData.firstName,
-    formData.lastName,
-    formData.address,
-    formData.postalCode,
-    formData.city,
-    formData.email,
-    formData.phoneNumber
+    firstName.value,
+    lastName.value,
+    address,
+    postalCode,
+    city,
+    email.value,
+    phoneNumber
   )
 
   if (bookingResult?.confirmationToken) {
@@ -101,17 +109,17 @@ const handleBookNow = async () => {
       query: { token: bookingResult.confirmationToken },
     })
   } else {
-    error.value = 'No confirmation token received'
+    validationError.value = 'No confirmation token received'
   }
 }
 
+// Computed property for button disabled state
 const isButtonDisabled = computed(() => {
-  return !checkInDate.value || !checkOutDate.value || loading.value;
+  return !checkInDate.value || !checkOutDate.value || loading.value
 })
 
 fetchProperty()
 </script>
-
 
 <template>
   <div class="booking-page">
@@ -153,29 +161,29 @@ fetchProperty()
           </div>
         </div>
       </div>
+
       <div class="guest-info">
-  <h3>Dina kontaktuppgifter</h3>
-  <div class="form-grid">
-    <input type="text" placeholder="Förnamn" v-model="firstName" />
-    <input type="text" placeholder="Efternamn" v-model="lastName" />
-    <input type="text" placeholder="Adress" class="full-width" />
-    <input type="text" placeholder="Postnummer" />
-    <input type="text" placeholder="Ort" />
-    <input type="email" placeholder="Mailadress" v-model="email" class="full-width" />
-    <input type="tel" placeholder="Telefonnummer" class="full-width" />
-  </div>
-</div>
+        <h3>Dina kontaktuppgifter</h3>
+        <div class="form-grid">
+          <input type="text" placeholder="Förnamn" v-model="firstName" required />
+          <input type="text" placeholder="Efternamn" v-model="lastName" required />
+          <input type="text" placeholder="Adress" class="full-width" required />
+          <input type="text" placeholder="Postnummer" required />
+          <input type="text" placeholder="Ort" required />
+          <input type="email" placeholder="Mailadress" v-model="email" class="full-width" required />
+          <input type="tel" placeholder="Telefonnummer" class="full-width" required />
+        </div>
+      </div>
 
-
-      <!-- Payment form -->
       <div class="payment-info">
         <h3>Betalning</h3>
         <div class="form-grid">
-          <input type="text" placeholder="Kortnummer" class="full-width">
-          <input type="text" placeholder="Datum">
-          <input type="text" placeholder="CVV">
+          <input type="text" placeholder="Kortnummer" class="full-width" required />
+          <input type="text" placeholder="Datum" required />
+          <input type="text" placeholder="CVV" required />
         </div>
       </div>
+
       <button 
         @click="handleBookNow" 
         :disabled="isButtonDisabled" 
@@ -183,13 +191,17 @@ fetchProperty()
       >
         {{ bookingLoading ? 'Laddar...' : 'Reservera och betala' }}
       </button>
+      <ValidationModal
+        v-model:isOpen="showValidationModal"
+        :missing-fields="missingFields"
+      />
+      
     </div>
     <div v-else class="error">
-      No property details available. Try again.
+      <p>Inget boende tillgängligt</p>
     </div>
   </div>
 </template>
-
 
 <style scoped>
 .booking-page {
