@@ -56,7 +56,7 @@ watch([startDate, endDate], ([newStartDate, newEndDate], [oldStartDate, oldEndDa
   <div class="book-property">
     <h3 class="book-title">Välj datum</h3>
     <div>
-      <label for="startDate">Check-in:</label>
+      <label for="startDate">Incheckning</label>
       <Datepicker
         v-model="startDate"
         :min-date="minDate"
@@ -66,7 +66,7 @@ watch([startDate, endDate], ([newStartDate, newEndDate], [oldStartDate, oldEndDa
       />
     </div>
     <div>
-      <label for="endDate">Check-out:</label>
+      <label for="endDate">Utcheckning</label>
       <Datepicker
         v-model="endDate"
         :min-date="startDate || minDate"

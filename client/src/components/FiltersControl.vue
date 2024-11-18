@@ -47,10 +47,10 @@ const {
         />
       </div>
       <div v-if="showDateDropdown" class="date-dropdown">
-        <label>Check in</label>
-        <Datepicker v-model="checkInDate" placeholder="Select check-in date" />
-        <label>Check out</label>
-        <Datepicker v-model="checkOutDate" placeholder="Select check-out date" />
+        <label>Incheckning</label>
+        <Datepicker v-model="checkInDate" placeholder="Välj datum" />
+        <label>Utcheckning</label>
+        <Datepicker v-model="checkOutDate" placeholder="Välj datum" />
       </div>
     </div>
     
