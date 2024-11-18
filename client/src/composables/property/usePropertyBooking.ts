@@ -59,7 +59,7 @@ export function usePropertyBooking(property: Property, propertyId: string) {
         }
       })
     } else {
-      alert('Select check-in and check-out dates before proceeding')
+      console.error('Dates are not selected')
     }
   }
 

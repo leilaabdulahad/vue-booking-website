@@ -74,11 +74,11 @@ onMounted(() => {
           <div class="booking-details">
             <div class="details-grid">
               <div class="detail-item">
-                <span class="detail-label">Check-in</span>
+                <span class="detail-label">Incheckning</span>
                 <span class="detail-value">{{ formatDate(booking.startDate) }}</span>
               </div>
               <div class="detail-item">
-                <span class="detail-label">Check-out</span>
+                <span class="detail-label">Utcheckning</span>
                 <span class="detail-value">{{ formatDate(booking.endDate) }}</span>
               </div>
               <div class="detail-item">
