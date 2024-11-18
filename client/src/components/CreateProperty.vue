@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { SignInButton, useUser } from 'vue-clerk'
+import { ref } from 'vue'
+import { SignInButton } from 'vue-clerk'
 import { useUserSync } from '@/composables/user/useUserSync'
 import { usePropertyForm } from '@/composables/property/usePropertyForm'
 
 const { isSignedIn, user } = useUserSync()
+
 const {
   title,
   description,
@@ -17,16 +19,44 @@ const {
   selectedFiles,
   errorMessage,
   handleFileUpload,
-  createProperty
+  createProperty,
 } = usePropertyForm(user.value?.id || '')
+
+const successMessage = ref<string | null>(null)
+
+const handleSubmit = async () => {
+  successMessage.value = null 
+  errorMessage.value = null  
+  const result = await createProperty()
+  
+  if (result.success) {
+    successMessage.value = result.message || 'Boendet har publicerats!' 
+  } else {
+    errorMessage.value = 'Något gick fel. Försök igen.'
+  }
+
+  setTimeout(() => {
+    successMessage.value = null
+    errorMessage.value = null
+  }, 5000) 
+}
 </script>
 
 <template>
   <div v-if="isSignedIn">
-  <div class="create-property">
-    
+    <div class="create-property">
       <h2 class="title">Publicera boende</h2>
-      <form @submit.prevent="createProperty" class="property-form">
+
+      <div v-if="successMessage" class="success-message">
+        {{ successMessage }}
+      </div>
+  
+      <div v-if="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <form @submit.prevent="handleSubmit" class="property-form">
+        <!-- Form fields -->
         <div class="form-group">
           <label for="title">Titel</label>
           <input id="title" v-model.trim="title" required class="form-input" />
@@ -34,10 +64,10 @@ const {
 
         <div class="form-group">
           <label for="description">Beskrivning</label>
-          <textarea 
-            id="description" 
-            v-model="description" 
-            required 
+          <textarea
+            id="description"
+            v-model="description"
+            required
             class="form-textarea"
             rows="4"
           ></textarea>
@@ -78,12 +108,12 @@ const {
 
         <div class="form-group">
           <label for="amenities">Bekvämligheter</label>
-          <input 
-            id="amenities" 
-            v-model="amenities" 
-            required 
+          <input
+            id="amenities"
+            v-model="amenities"
+            required
             class="form-input"
-            placeholder="Wifi, Parkering, Pool, m.m." 
+            placeholder="Wifi, Parkering, Pool, m.m."
           />
         </div>
 
@@ -102,7 +132,7 @@ const {
         </div>
 
         <div v-if="selectedFiles.length > 0" class="selected-files">
-          <p class="files-heading">Välj bilder</p>
+          <p class="files-heading">Valda bilder:</p>
           <ul class="files-list">
             <li v-for="(file, index) in selectedFiles" :key="index">
               {{ file.name }}
@@ -113,21 +143,18 @@ const {
         <button type="submit" class="submit-button">Publicera</button>
       </form>
     </div>
-
-    
-    <div v-if="errorMessage" class="error-message">
-      {{ errorMessage }}
-    </div>
-   
   </div>
-  <div v-else="!isSignedIn" class="signin-container">
+
+  <div v-else class="signin-container">
     <p>Du måste vara inloggad för att publicera ditt boende</p>
     <SignInButton />
   </div>
 </template>
 
-<style scoped>
 
+
+
+<style scoped>
 .signin-container{
   display: flex;
   flex-direction: column;
@@ -270,13 +297,23 @@ label {
   background-color: #1E3E62;
 }
 
+.success-message {
+  color: #28a745;
+  background-color: #e9f5ea;
+  padding: 10px;
+  border: 1px solid #28a745;
+  border-radius: 5px;
+  text-align: center;
+  margin: 30px 0;
+}
+
 .error-message {
-  color: #e53e3e;
-  background-color: #fff5f5;
-  padding: 1rem;
-  border-radius: 6px;
-  margin-top: 1rem;
-  border: 1px solid #feb2b2;
+  color: #dc3545;
+  background-color: #f8d7da;
+  padding: 10px;
+  border: 1px solid #dc3545;
+  border-radius: 5px;
+  margin-top: 10px;
 }
 
 @media (max-width: 768px) {

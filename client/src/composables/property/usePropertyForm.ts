@@ -1,7 +1,7 @@
 import { ref } from 'vue'
-import { createNewProperty } from '../../services/propertyService'
+import { createNewProperty } from '@/services/propertyService'
 
-//handles the form state, file upload logic, property creation functionality 
+// Handles the form state, file upload logic, and property creation functionality
 export const usePropertyForm = (userId: string) => {
   const title = ref('')
   const description = ref('')
@@ -15,19 +15,19 @@ export const usePropertyForm = (userId: string) => {
   const errorMessage = ref<string | null>(null)
   const selectedFiles = ref<File[]>([])
 
-  //handles file upload and limits selection to 10 files
-  const handleFileUpload =(event: Event) => {
+  // Handles file upload, limited to 10 files
+  const handleFileUpload = (event: Event) => {
     const target = event.target as HTMLInputElement
     if (target.files) {
-        selectedFiles.value = Array.from(target.files).slice(0, 10)
+      selectedFiles.value = Array.from(target.files).slice(0, 10)
     }
   }
 
-  //create new property by sending form data to server
-  const createProperty = async () => {
+  // Create new property by sending form data to the server
+  const createProperty = async (): Promise<{ success: boolean; message?: string }> => {
     try {
-        const formData = new FormData()
-        formData.append('title', title.value)
+      const formData = new FormData()
+      formData.append('title', title.value)
       formData.append('description', description.value)
       formData.append('country', country.value)
       formData.append('city', city.value)
@@ -38,20 +38,22 @@ export const usePropertyForm = (userId: string) => {
       formData.append('amenities', amenities.value)
       formData.append('clerkUserId', userId)
 
-      //append imgs
+      // Append images
       selectedFiles.value.forEach((file) => {
         formData.append('images', file)
       })
 
       await createNewProperty(formData)
-
-    resetForm()
+      resetForm()
+      return { success: true, message: 'Boendet har publicerats!' }
     } catch (error) {
-        console.error('Error creating property:', error)
-        errorMessage.value = 'Failed to create property. Try again'
+      console.error('Error creating property:', error)
+      errorMessage.value = 'Något gick fel. Försök igen.'
+      return { success: false }
     }
   }
 
+  // Reset the form state.
   const resetForm = () => {
     title.value = ''
     description.value = ''
@@ -80,6 +82,6 @@ export const usePropertyForm = (userId: string) => {
     errorMessage,
     handleFileUpload,
     createProperty,
-    resetForm
+    resetForm,
   }
 }

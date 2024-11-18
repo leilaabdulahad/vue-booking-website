@@ -121,7 +121,6 @@ const handleFilterUpdate = (filterState: FilterState) => {
         <router-link to="/" class="navbar-item">Hem</router-link>
         <router-link to="/favorites" class="navbar-item">Favoriter</router-link>
         <router-link to="/my-bookings" class="navbar-item">Mina Bokningar</router-link>
-        <router-link to="/properties" class="navbar-item">Alla boende</router-link>
         <router-link to="/create-property" class="navbar-item">Publicera boende</router-link>
         <div class="navbar-item auth-buttons">
           <SignedIn>
