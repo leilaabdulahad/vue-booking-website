@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, watchEffect } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, ref } from 'vue'
 import { useUser } from 'vue-clerk'
-import { fetchPropertyById } from '../services/propertyService'
+import { useRoute, useRouter } from 'vue-router'
+import ValidationModal from './ValidationModal.vue'
 import { useBooking } from '@/composables/booking/useBooking'
 import { usePricing } from '@/composables/pricing/usePricing'
-import ValidationModal from './ValidationModal.vue'
+import { usePropertyDetails } from '@/composables/property/usePropertyDetails'
+import { useGuestInfo } from '@/composables/guest/useGuestInfo'
+import { useFormValidation } from '@/composables/ui/useFormValidation'
 
 const route = useRoute()
 const router = useRouter()
@@ -14,16 +16,27 @@ const { user } = useUser()
 const propertyId = route.query.propertyId as string
 const checkInDate = ref(route.query.checkIn as string)
 const checkOutDate = ref(route.query.checkOut as string)
-const property = ref<Property | null>(null)
-const loading = ref(true)
-const error = ref('')
 
-const firstName = ref<string>('')
-const lastName = ref<string>('')
-const email = ref<string>('')
+const { 
+  property, 
+  loading, 
+  error: propertyError,
+  fetchProperty 
+} = usePropertyDetails(propertyId)
 
-const showValidationModal = ref(false)
-const missingFields = ref<string[]>([])
+const { 
+  firstName, 
+  lastName, 
+  email 
+} = useGuestInfo()
+
+const {
+  showValidationModal,
+  missingFields,
+  error: validationError,
+  validateForm,
+  getInputValue
+} = useFormValidation()
 
 const { 
   error: bookingError, 
@@ -45,43 +58,18 @@ const {
   checkOutDate,
 })
 
-// Fetch property details
-const fetchProperty = async () => {
-  try {
-    property.value = await fetchPropertyById(propertyId)
-  } catch (err) {
-    console.error('Failed to fetch property details:', err)
-    error.value = 'Failed to load property details. Try again'
-  } finally {
-    loading.value = false
-  }
-}
+// Computed error state that combines all possible errors
+const error = computed(() => propertyError.value || bookingError.value || validationError.value)
 
-// Fill user details if logged in
-watchEffect(() => {
-  if (user.value) {
-    firstName.value = user.value.firstName || ''
-    lastName.value = user.value.lastName || ''
-    email.value = user.value.emailAddresses[0]?.emailAddress || ''
-  }
-})
-
-// Booking action
+// Booking
 const handleBookNow = async () => {
   if (!user.value) {
-    error.value = 'Please log in to book a property'
+    validationError.value = 'Please log in to book a property'
     return
   }
 
-  interface FieldCheck {
-    value: string
-    label: string
-  }
-
-  const getInputValue = (selector: string): string => 
-    (document.querySelector(`input[placeholder="${selector}"]`) as HTMLInputElement)?.value.trim() ?? ''
-
-  const requiredFields: FieldCheck[] = [
+  // Required fields for booking
+  const requiredFields = [
     { value: firstName.value, label: 'Förnamn' },
     { value: lastName.value, label: 'Efternamn' },
     { value: getInputValue('Adress'), label: 'Adress' },
@@ -92,28 +80,16 @@ const handleBookNow = async () => {
     { value: getInputValue('Kortnummer'), label: 'Kortnummer' },
     { value: getInputValue('Datum'), label: 'Datum' },
     { value: getInputValue('CVV'), label: 'CVV' },
-  ];
+  ]
 
-  const missing = requiredFields
-    .filter(field => !field.value)
-    .map(field => field.label)
-
-  if (missing.length > 0) {
-    missingFields.value = missing;
-    showValidationModal.value = true
+  if (!validateForm(requiredFields)) {
     return
   }
 
-
-  const address = (document.querySelector('input[placeholder="Adress"]') as HTMLInputElement)?.value.trim()
-  const postalCode = (document.querySelector('input[placeholder="Postnummer"]') as HTMLInputElement)?.value.trim()
-  const city = (document.querySelector('input[placeholder="Ort"]') as HTMLInputElement)?.value.trim()
-  const phoneNumber = (document.querySelector('input[placeholder="Telefonnummer"]') as HTMLInputElement)?.value.trim()
-
-  if (!firstName.value || !lastName.value || !email.value || !address || !postalCode || !city || !phoneNumber) {
-    error.value = 'All fields are required'
-    return
-  }
+  const address = getInputValue('Adress')
+  const postalCode = getInputValue('Postnummer')
+  const city = getInputValue('Ort')
+  const phoneNumber = getInputValue('Telefonnummer')
 
   const bookingResult = await handleBooking(
     checkInDate.value,
@@ -133,12 +109,13 @@ const handleBookNow = async () => {
       query: { token: bookingResult.confirmationToken },
     })
   } else {
-    error.value = 'No confirmation token received';
+    validationError.value = 'No confirmation token received'
   }
 }
 
+// Computed property for button disabled state
 const isButtonDisabled = computed(() => {
-  return !checkInDate.value || !checkOutDate.value || loading.value;
+  return !checkInDate.value || !checkOutDate.value || loading.value
 })
 
 fetchProperty()
@@ -221,12 +198,10 @@ fetchProperty()
       
     </div>
     <div v-else class="error">
-      No property details available. Try again.
+      <p>Inget boende tillgängligt</p>
     </div>
   </div>
 </template>
-
-
 
 <style scoped>
 .booking-page {
