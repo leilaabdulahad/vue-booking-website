@@ -2,6 +2,9 @@ import { updatePropertyDates } from "@/services/propertyService"
 import { useRoute, useRouter } from 'vue-router'
 import { ref } from 'vue'
 
+// Manages the checkin/out dates for a property booking
+// Handles date updates and synchronizes the with the URL query
+
 export const useBookingDates = (propertyId: string) => {
     const route = useRoute()
     const router = useRouter()

@@ -3,6 +3,9 @@ import axios from 'axios'
 import { bookProperty } from '@/services/bookingService'
 import { useRouter } from 'vue-router'
 
+// Handles creation of new bokings and manages the booking submission 
+// Takes propertyId and userId as parameters to create new booking with user details
+
 export const useBooking = (propertyId: string, userId: string | undefined) => {
   const error = ref<string | null>(null)
   const success = ref(false)

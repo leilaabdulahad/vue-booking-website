@@ -2,6 +2,9 @@ import { fetchUserBookings } from "@/services/bookingService"
 import { useAuth } from "vue-clerk"
 import { ref, onMounted } from "vue"
 
+// Fetches and manages all bookings for the currently autenticated user
+// Sorting and date formatting for the fetched bookings
+
 export const useFetchBookings = () => {
 
     const { userId } = useAuth()

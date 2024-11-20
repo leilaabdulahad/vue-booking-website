@@ -1,6 +1,9 @@
 import { ref, onMounted } from 'vue'
 import type { Ref } from 'vue'
-import { fetchUnavailableDates } from '../../services/bookingService'
+import { fetchUnavailableDates } from '@/services/bookingService'
+
+// Fetches and tracks unavailable dates for specific property
+// Has functionality that checks if specific dates are available for booking
 
 export const useUnavailableDates = (propertyId: string) => {
   const unavailableDates: Ref<Booking[]> = ref([])

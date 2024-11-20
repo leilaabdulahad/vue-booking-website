@@ -2,30 +2,19 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getBookingByToken } from '@/services/bookingService'
+import { useBookingConfirmation } from '@/composables/booking/useBookingConfirmation';
 
-const route = useRoute()
-const booking = ref<Booking | null>(null)
-const error = ref<string>('')
-const loading = ref(true)
+const {
+  booking, 
+  error,
+  loading,
+  fetchBooking
+} = useBookingConfirmation()
 
-onMounted(async () => {
-  const token = route.query.token as string
+onMounted(() => {
+  fetchBooking()
+})
 
-  if (!token) {
-    error.value = 'Ingen bokningsinformation tillgänglig'
-    loading.value = false
-    return
-  }
-
-  try {
-    const fetchedBooking = await getBookingByToken(token)
-    booking.value = fetchedBooking
-  } catch (err) {
-    error.value = 'Bokningen har utgått eller är ogiltig'
-  } finally {
-    loading.value = false
-  }
-});
 </script>
 
 <template>
