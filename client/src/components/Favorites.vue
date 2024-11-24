@@ -1,28 +1,15 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
 import { SignInButton } from 'vue-clerk'
 import PropertyCard from '@/components/PropertyCard.vue'
-import { useFavoritesList } from '@/composables/favorite/useFavoriteList'
-import { useAuth } from '@/composables/user/useAuth'
+import { useFavoritesListView } from '@/composables/favorite/useFavoritesListView'
 
-const { isSignedIn, user, isLoaded } = useAuth()
-const { 
-  favorites, 
-  loading, 
-  error, 
-  fetchFavoritesList, 
-  removeFavoriteFromList 
-} = useFavoritesList()
-
-const handleFavoriteToggled = (propertyId: string) => {
-  removeFavoriteFromList(propertyId)
-}
-
-onMounted(() => {
-  if (isLoaded.value && user.value) {
-    fetchFavoritesList()
-  }
-})
+const {
+  isSignedIn,
+  favorites,
+  loading,
+  error,
+  handleFavoriteToggled
+} = useFavoritesListView()
 </script>
 
 <template>
